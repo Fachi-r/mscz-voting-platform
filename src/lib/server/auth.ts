@@ -2,6 +2,8 @@ import {
   BETTER_AUTH_SECRET,
   GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
   ORIGIN,
 } from "$app/env/private";
 
@@ -21,6 +23,11 @@ export const auth = betterAuth({
     github: {
       clientId: GITHUB_CLIENT_ID,
       clientSecret: GITHUB_CLIENT_SECRET,
+    },
+    google: {
+      prompt: "select_account",
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
     },
   },
   plugins: [

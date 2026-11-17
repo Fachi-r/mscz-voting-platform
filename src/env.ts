@@ -17,4 +17,12 @@ export const variables = defineEnvVars({
     description:
       "GitHub OAuth client secret. See [Better Auth GitHub provider](https://www.better-auth.com/docs/authentication/github).",
   },
+  GOOGLE_CLIENT_ID: {
+    description:
+      "Google OAuth client ID. See [Better Auth Google provider](https://www.better-auth.com/docs/authentication/google).",
+  },
+  GOOGLE_CLIENT_SECRET: {
+    description:
+      "Google OAuth client secret. See [Better Auth Google provider](https://www.better-auth.com/docs/authentication/google).",
+  },
 });
