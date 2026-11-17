@@ -1,14 +1,15 @@
-import { fail, redirect } from "@sveltejs/kit";
-import type { Actions } from "./$types";
-import type { PageServerLoad } from "./$types";
 import { auth } from "#lib/server/auth.ts";
+import { fail, redirect, type Actions } from "@sveltejs/kit";
 import { APIError } from "better-auth/api";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = (event) => {
-  if (event.locals.user) {
-    return redirect(302, "/demo/better-auth");
-  }
-  return {};
+  const user = event.locals.user;
+  if (!user) return;
+
+  const location = user.role === "admin" ? "/admin" : "/";
+
+  return redirect(302, location);
 };
 
 export const actions: Actions = {
@@ -32,7 +33,7 @@ export const actions: Actions = {
       return fail(500, { message: "Unexpected error" });
     }
 
-    return redirect(302, "/demo/better-auth");
+    return redirect(302, "/");
   },
   signUpEmail: async (event) => {
     const formData = await event.request.formData();
@@ -56,12 +57,12 @@ export const actions: Actions = {
       return fail(500, { message: "Unexpected error" });
     }
 
-    return redirect(302, "/demo/better-auth");
+    return redirect(302, "/");
   },
   signInSocial: async (event) => {
     const formData = await event.request.formData();
     const provider = formData.get("provider")?.toString() ?? "github";
-    const callbackURL = formData.get("callbackURL")?.toString() ?? "/demo/better-auth";
+    const callbackURL = formData.get("callbackURL")?.toString() ?? "/";
 
     const result = await auth.api.signInSocial({
       body: {
