@@ -30,8 +30,16 @@ export const auth = betterAuth({
       clientSecret: GOOGLE_CLIENT_SECRET,
     },
   },
+  user: {
+    additionalFields: {
+      nrc: { type: "string", required: false, input: true },
+      isVerified: { type: "boolean", defaultValue: false, input: false }, // critical
+    },
+  },
   plugins: [
-    admin(),
+    admin({
+      defaultRole: "voter",
+    }),
     sveltekitCookies(getRequestEvent), // make sure this is the last plugin in the array
   ],
 });
