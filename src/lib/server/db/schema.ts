@@ -10,6 +10,7 @@ import {
   unique,
   foreignKey,
   check,
+  uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.schema";
@@ -97,7 +98,8 @@ export const ballots = pgTable(
 export const votes = pgTable(
   "votes",
   {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    // Random id (not sequential) so insertion order can't be matched to ballots.id
+    id: uuid("id").primaryKey().defaultRandom(),
     pollId: integer("poll_id").notNull(),
     candidateId: integer("candidate_id").notNull(),
   },
