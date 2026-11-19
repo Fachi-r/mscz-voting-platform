@@ -186,6 +186,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@lucide/svelte':
+        specifier: ^1.75.0
+        version: 1.75.0(svelte@5.57.3(@typescript-eslint/types@8.72.2))
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^8.0.0
@@ -211,6 +215,9 @@ importers:
       better-auth:
         specifier: ^1.6.24
         version: 1.7.25(@sveltejs/kit@3.2.0(@sveltejs/vite-plugin-svelte@7.3.1(@voidzero-dev/vite-plus-core@1.6.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(svelte@5.57.3(@typescript-eslint/types@8.72.2)))(@voidzero-dev/vite-plus-core@1.6.0(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(svelte@5.57.3(@typescript-eslint/types@8.72.2))(typescript@6.0.3))(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(kysely@0.29.9)(postgres@3.4.9))(svelte@5.57.3(@typescript-eslint/types@8.72.2))(vitest@5.1.0)
+      daisyui:
+        specifier: ^5.8.1
+        version: 5.8.1
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.11
@@ -1053,6 +1060,11 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+
+  '@lucide/svelte@1.75.0':
+    resolution: {integrity: sha512-iGFP2m718jy26FrCXMxSbzz8WCDL4kx5lWN2jeXg1jzM0GcSLoQ9ygzDF++bpUjw5WHXNVCw90lBh0mvTAih+Q==}
+    peerDependencies:
+      svelte: ^5
 
   '@mrleebo/prisma-ast@0.16.0':
     resolution: {integrity: sha512-a9ELYNIflEQP38tSu6gnUgSAWgXjuhMvC52868K5sWgyRmYsjiJMWTUmm8iy7hZT5EN2ZKVydMTFP2q3/+6ccg==}
@@ -1951,6 +1963,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  daisyui@5.8.1:
+    resolution: {integrity: sha512-ptP4WHOJ6WltNnA5zwkg3GypOLhsyUM2FHuXCckWVEpWviioInFKsjnShCWYGYHsQ5P9bUCOH1tn45cKLeTUpg==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -3587,6 +3602,10 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
+  '@lucide/svelte@1.75.0(svelte@5.57.3(@typescript-eslint/types@8.72.2))':
+    dependencies:
+      svelte: 5.57.3(@typescript-eslint/types@8.72.2)
+
   '@mrleebo/prisma-ast@0.16.0':
     dependencies:
       chevrotain: 12.0.0
@@ -4230,6 +4249,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  daisyui@5.8.1: {}
 
   debug@4.4.3:
     dependencies:

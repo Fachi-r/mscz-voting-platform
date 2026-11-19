@@ -24,6 +24,9 @@
     "db:studio": "drizzle-kit studio",
     "auth:schema": "auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes"
   },
+  "dependencies": {
+    "@lucide/svelte": "^1.75.0"
+  },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^8.0.0",
     "@sveltejs/kit": "^3.0.0",
@@ -33,6 +36,7 @@
     "@types/node": "^26",
     "auth": "^1.6.24",
     "better-auth": "^1.6.24",
+    "daisyui": "^5.8.1",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "drizzle-seed": "^0.3.1",
