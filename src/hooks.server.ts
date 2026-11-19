@@ -1,11 +1,12 @@
-import { sequence, type Handle } from "@sveltejs/kit/hooks";
-import { building } from "$app/env";
+// src/hooks.server.ts
 import { auth } from "#lib/server/auth.ts";
-import { svelteKitHandler } from "better-auth/svelte-kit";
+import { building } from "$app/env";
 import { redirect } from "@sveltejs/kit";
+import { sequence, type Handle } from "@sveltejs/kit/hooks";
+import { svelteKitHandler } from "better-auth/svelte-kit";
 
 // 1. Load the session onto event.locals for every request
-const handleBetterAuth: Handle = async ({ event, resolve }) => {
+const loadSession: Handle = async ({ event, resolve }) => {
   const session = await auth.api.getSession({ headers: event.request.headers });
 
   if (session) {
@@ -13,7 +14,7 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
     event.locals.user = session.user;
   }
 
-  return svelteKitHandler({ event, resolve, auth, building });
+  return resolve(event);
 };
 
 // 2. Gate /admin routes. Role is checked server-side on every request.
@@ -26,4 +27,8 @@ const guardAdmin: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-export const handle: Handle = sequence(guardAdmin, handleBetterAuth);
+// 3. Better Auth's own handler (serves /api/auth/*)
+const betterAuth: Handle = ({ event, resolve }) =>
+  svelteKitHandler({ event, resolve, auth, building });
+
+export const handle: Handle = sequence(loadSession, guardAdmin, betterAuth);

@@ -1,15 +1,16 @@
+// src/lib/server/db/schema.ts
 import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
+  check,
+  foreignKey,
+  index,
+  integer,
   pgTable,
   text,
   timestamp,
-  boolean,
-  integer,
-  index,
-  uniqueIndex,
   unique,
-  foreignKey,
-  check,
+  uniqueIndex,
   uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
@@ -18,32 +19,54 @@ import { user } from "./auth.schema";
 export * from "./auth.schema";
 
 // ---------------------------------------------------------------------------
-// Polls
+// Elections: one voting window containing several polls (Chair, Deputy, Committee).
+// A runoff is simply a new election containing the tied polls.
+// ---------------------------------------------------------------------------
+export const elections = pgTable(
+  "elections",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    title: text("title").notNull(),
+    description: text("description"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    isClosed: boolean("is_closed").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check("elections_window_chk", sql`${table.endsAt} > ${table.startsAt}`),
+    index("elections_status_endsAt_idx").on(table.isClosed, table.endsAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// Polls: one position within an election.
+// maxSelections = number of seats (1 for Chair/Deputy, 3 for Committee).
 // ---------------------------------------------------------------------------
 export const polls = pgTable(
   "polls",
   {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    title: text("title").notNull(),
+    electionId: integer("election_id")
+      .notNull()
+      .references(() => elections.id, { onDelete: "restrict" }),
     position: text("position").notNull(),
     description: text("description"),
-    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
-    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
-    isClosed: boolean("is_closed").default(false).notNull(),
+    maxSelections: integer("max_selections").default(1).notNull(),
+    displayOrder: integer("display_order").default(0).notNull(),
     isRunoff: boolean("is_runoff").default(false).notNull(),
     runoffOfPollId: integer("runoff_of_poll_id").references((): AnyPgColumn => polls.id, {
       onDelete: "restrict",
     }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    check("polls_window_chk", sql`${table.endsAt} > ${table.startsAt}`),
+    unique("polls_election_position_unique").on(table.electionId, table.position),
+    check("polls_max_selections_chk", sql`${table.maxSelections} >= 1`),
     check(
       "polls_runoff_chk",
       sql`(${table.isRunoff} = false AND ${table.runoffOfPollId} IS NULL)
        OR (${table.isRunoff} = true  AND ${table.runoffOfPollId} IS NOT NULL)`,
     ),
-    index("polls_status_endsAt_idx").on(table.isClosed, table.endsAt),
     index("polls_runoffOf_idx").on(table.runoffOfPollId),
   ],
 );
@@ -62,15 +85,15 @@ export const candidates = pgTable(
     image: text("image"),
   },
   (table) => [
+    index("candidates_pollId_idx").on(table.pollId),
     // Target for votes' composite FK (candidate must belong to the poll)
     unique("candidates_id_pollId_unique").on(table.id, table.pollId),
-    // No duplicate names in a poll (also covers lookups by pollId)
-    unique("candidates_pollId_name_unique").on(table.pollId, table.name),
   ],
 );
 
 // ---------------------------------------------------------------------------
-// Ballots: records THAT a user voted in a poll (no choice stored).
+// Ballots: records THAT a user took part in a poll (no choices stored).
+// castBallot inserts one row per poll in the election, even when the voter abstains.
 // ---------------------------------------------------------------------------
 export const ballots = pgTable(
   "ballots",
@@ -85,32 +108,30 @@ export const ballots = pgTable(
     castAt: timestamp("cast_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    // One vote per user per poll
     uniqueIndex("ballots_user_poll_uidx").on(table.userId, table.pollId),
-    index("ballots_pollId_idx").on(table.pollId), // turnout counts
+    index("ballots_pollId_idx").on(table.pollId),
   ],
 );
 
 // ---------------------------------------------------------------------------
-// Votes: records WHAT was chosen. Deliberately no userId and no timestamp,
-// so a vote can't be tied back to a voter. Insert with a ballot in ONE transaction.
+// Votes: one row per selected candidate. No userId, no timestamp, random id.
+// "At most maxSelections per voter" and "no duplicate picks" are enforced in
+// castBallot (the DB can't, by design: there's no link to the voter).
+// Audit invariant per poll: count(votes) <= count(ballots) * maxSelections.
 // ---------------------------------------------------------------------------
 export const votes = pgTable(
   "votes",
   {
-    // Random id (not sequential) so insertion order can't be matched to ballots.id
     id: uuid("id").primaryKey().defaultRandom(),
     pollId: integer("poll_id").notNull(),
     candidateId: integer("candidate_id").notNull(),
   },
   (table) => [
-    // candidate must belong to this poll (also implies the poll exists)
     foreignKey({
       columns: [table.candidateId, table.pollId],
       foreignColumns: [candidates.id, candidates.pollId],
       name: "votes_candidate_poll_fk",
     }).onDelete("restrict"),
-    // Fast tallying
     index("votes_pollId_candidateId_idx").on(table.pollId, table.candidateId),
   ],
 );
@@ -118,7 +139,15 @@ export const votes = pgTable(
 // ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
+export const electionsRelations = relations(elections, ({ many }) => ({
+  polls: many(polls),
+}));
+
 export const pollsRelations = relations(polls, ({ one, many }) => ({
+  election: one(elections, {
+    fields: [polls.electionId],
+    references: [elections.id],
+  }),
   candidates: many(candidates),
   ballots: many(ballots),
   votes: many(votes),
@@ -142,7 +171,6 @@ export const ballotsRelations = relations(ballots, ({ one }) => ({
 
 export const votesRelations = relations(votes, ({ one }) => ({
   poll: one(polls, { fields: [votes.pollId], references: [polls.id] }),
-  // composite: mirrors the composite foreign key
   candidate: one(candidates, {
     fields: [votes.candidateId, votes.pollId],
     references: [candidates.id, candidates.pollId],

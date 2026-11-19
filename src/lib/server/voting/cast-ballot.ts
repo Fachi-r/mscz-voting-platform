@@ -1,104 +1,180 @@
-import { db } from "#lib/server/db/index.ts";
-import { ballots, candidates, polls, user, votes } from "#lib/server/db/schema.ts";
-import { and, eq, sql } from "drizzle-orm";
+// src/lib/server/voting/cast-ballot.ts
+import { eq, inArray, sql } from "drizzle-orm";
+import { db } from "../db";
+import { user } from "../db/auth.schema";
+import { elections, polls, candidates, ballots, votes } from "../db/schema";
 
-export type VoteErrorCode =
+export type BallotErrorCode =
   | "VOTER_NOT_FOUND"
   | "NOT_VERIFIED"
   | "BANNED"
-  | "POLL_NOT_FOUND"
-  | "POLL_NOT_OPEN"
-  | "BAD_CANDIDATE"
+  | "ELECTION_NOT_FOUND"
+  | "ELECTION_NOT_OPEN"
+  | "INVALID_SELECTION"
+  | "TOO_MANY_SELECTIONS"
   | "ALREADY_VOTED";
 
-export class VoteError extends Error {
+export class BallotError extends Error {
   constructor(
-    public readonly code: VoteErrorCode,
+    public readonly code: BallotErrorCode,
     message: string,
   ) {
     super(message);
-    this.name = "VoteError";
+    this.name = "BallotError";
   }
 }
 
-export const VOTE_ERROR_STATUS: Record<VoteErrorCode, number> = {
+export const BALLOT_ERROR_STATUS: Record<BallotErrorCode, number> = {
   VOTER_NOT_FOUND: 401,
   NOT_VERIFIED: 403,
   BANNED: 403,
-  POLL_NOT_FOUND: 404,
-  POLL_NOT_OPEN: 409,
-  BAD_CANDIDATE: 400,
+  ELECTION_NOT_FOUND: 404,
+  ELECTION_NOT_OPEN: 409,
+  INVALID_SELECTION: 400,
+  TOO_MANY_SELECTIONS: 400,
   ALREADY_VOTED: 409,
 };
 
-interface CastVoteInput {
+export interface CastBallotInput {
   userId: string;
-  pollId: number;
-  candidateId: number;
+  electionId: number;
+  /**
+   * pollId -> chosen candidateIds.
+   * A poll that is missing, or has an empty array, counts as an abstention.
+   */
+  selections: Record<number, number[]>;
 }
 
 /**
- * Casts one vote atomically. Everything below runs in a single transaction:
- * any thrown VoteError rolls back, so a ballot never exists without its vote
- * (or vice versa).
- *
- * Voter eligibility is read fresh from the DB, NOT from the session, so a ban or
- * un-verification takes effect immediately even if the session is cached.
+ * Casts a complete ballot (every poll in the election) in ONE transaction:
+ * either the voter's ballots and all their votes are recorded, or nothing is.
  */
-export async function castVote({ userId, pollId, candidateId }: CastVoteInput): Promise<void> {
+export async function castBallot({
+  userId,
+  electionId,
+  selections,
+}: CastBallotInput): Promise<void> {
+  // 1. Shape validation (no DB needed)
+  const chosen = new Map<number, number[]>();
+  for (const [rawPollId, ids] of Object.entries(selections)) {
+    const pollId = Number(rawPollId);
+    if (
+      !Number.isInteger(pollId) ||
+      pollId <= 0 ||
+      !Array.isArray(ids) ||
+      !ids.every((id) => Number.isInteger(id) && id > 0)
+    ) {
+      throw new BallotError("INVALID_SELECTION", "Your selections could not be read.");
+    }
+    if (new Set(ids).size !== ids.length) {
+      throw new BallotError("INVALID_SELECTION", "A candidate was selected more than once.");
+    }
+    chosen.set(pollId, ids);
+  }
+
   await db.transaction(async (tx) => {
-    // 1. Voter eligibility
+    // 2. Voter eligibility, read fresh from the DB (not the cached session)
     const [voter] = await tx
       .select({
         isVerified: user.isVerified,
-        // user.banExpires is `timestamp without time zone` (UTC), so compare against UTC now
+        // user.banExpires is `timestamp without time zone` (UTC)
         isBanned: sql<boolean>`${user.banned} AND (${user.banExpires} IS NULL OR ${user.banExpires} > (now() AT TIME ZONE 'UTC'))`,
       })
       .from(user)
       .where(eq(user.id, userId));
 
-    if (!voter) throw new VoteError("VOTER_NOT_FOUND", "Account not found.");
-    if (voter.isBanned) throw new VoteError("BANNED", "This account is suspended.");
+    if (!voter) throw new BallotError("VOTER_NOT_FOUND", "Account not found.");
+    if (voter.isBanned) throw new BallotError("BANNED", "This account is suspended.");
     if (!voter.isVerified) {
-      throw new VoteError("NOT_VERIFIED", "Your membership has not been verified yet.");
+      throw new BallotError("NOT_VERIFIED", "Your membership has not been verified yet.");
     }
 
-    // 2. Poll must be open. Uses the DB clock (not the app server's) and a SHARE lock:
-    //    voters don't block each other, but an admin closing the poll (UPDATE) waits
-    //    for in-flight votes, and later voters see isClosed = true.
-    const [poll] = await tx
+    // 3. Election must be open. DB clock + SHARE lock: voters don't block each
+    //    other, but an admin closing the election waits for in-flight ballots.
+    const [election] = await tx
       .select({
-        isOpen: sql<boolean>`${polls.isClosed} = false AND now() >= ${polls.startsAt} AND now() < ${polls.endsAt}`,
+        isOpen: sql<boolean>`${elections.isClosed} = false AND now() >= ${elections.startsAt} AND now() < ${elections.endsAt}`,
       })
-      .from(polls)
-      .where(eq(polls.id, pollId))
+      .from(elections)
+      .where(eq(elections.id, electionId))
       .for("share");
 
-    if (!poll) throw new VoteError("POLL_NOT_FOUND", "Poll not found.");
-    if (!poll.isOpen) throw new VoteError("POLL_NOT_OPEN", "This poll is not open for voting.");
+    if (!election) throw new BallotError("ELECTION_NOT_FOUND", "Election not found.");
+    if (!election.isOpen) {
+      throw new BallotError("ELECTION_NOT_OPEN", "This election is not open for voting.");
+    }
 
-    // 3. Candidate must belong to this poll (the composite FK also enforces this;
-    //    checking first gives a clean error instead of a constraint violation)
-    const [candidate] = await tx
-      .select({ id: candidates.id })
-      .from(candidates)
-      .where(and(eq(candidates.id, candidateId), eq(candidates.pollId, pollId)));
+    // 4. The polls that make up this ballot
+    const electionPolls = await tx
+      .select({
+        id: polls.id,
+        position: polls.position,
+        maxSelections: polls.maxSelections,
+      })
+      .from(polls)
+      .where(eq(polls.electionId, electionId));
 
-    if (!candidate) throw new VoteError("BAD_CANDIDATE", "Invalid candidate for this poll.");
+    if (electionPolls.length === 0) {
+      throw new BallotError("ELECTION_NOT_FOUND", "This election has no positions yet.");
+    }
 
-    // 4. Record participation. The unique (userId, pollId) index makes double-voting
-    //    impossible even under concurrent requests.
+    const pollIds = new Set(electionPolls.map((p) => p.id));
+    for (const pollId of chosen.keys()) {
+      if (!pollIds.has(pollId)) {
+        throw new BallotError("INVALID_SELECTION", "Your selections include an unknown position.");
+      }
+    }
+
+    // 5. Every chosen candidate must belong to the poll it was chosen in
+    const allChosenIds = [...chosen.values()].flat();
+    const validPairs = new Set<string>();
+    if (allChosenIds.length > 0) {
+      const rows = await tx
+        .select({ id: candidates.id, pollId: candidates.pollId })
+        .from(candidates)
+        .where(inArray(candidates.id, allChosenIds));
+      for (const r of rows) validPairs.add(`${r.pollId}:${r.id}`);
+    }
+
+    for (const poll of electionPolls) {
+      const ids = chosen.get(poll.id) ?? [];
+      if (ids.length > poll.maxSelections) {
+        throw new BallotError(
+          "TOO_MANY_SELECTIONS",
+          `You can select at most ${poll.maxSelections} for ${poll.position}.`,
+        );
+      }
+      for (const id of ids) {
+        if (!validPairs.has(`${poll.id}:${id}`)) {
+          throw new BallotError(
+            "INVALID_SELECTION",
+            `Invalid candidate selected for ${poll.position}.`,
+          );
+        }
+      }
+    }
+
+    // 6. Participation: one ballot row per poll, including abstentions. The unique
+    //    (userId, pollId) index makes double-voting impossible, even concurrently.
     const inserted = await tx
       .insert(ballots)
-      .values({ userId, pollId })
+      .values(electionPolls.map((p) => ({ userId, pollId: p.id })))
       .onConflictDoNothing()
       .returning({ id: ballots.id });
 
-    if (inserted.length === 0) {
-      throw new VoteError("ALREADY_VOTED", "You have already voted in this poll.");
+    if (inserted.length !== electionPolls.length) {
+      throw new BallotError("ALREADY_VOTED", "You have already voted in this election.");
     }
 
-    // 5. Record the choice, with no link back to the voter
-    await tx.insert(votes).values({ pollId, candidateId });
+    // 7. Choices, with no link back to the voter
+    const voteRows = electionPolls.flatMap((p) =>
+      (chosen.get(p.id) ?? []).map((candidateId) => ({
+        pollId: p.id,
+        candidateId,
+      })),
+    );
+    if (voteRows.length > 0) {
+      await tx.insert(votes).values(voteRows);
+    }
   });
 }
