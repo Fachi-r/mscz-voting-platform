@@ -93,7 +93,7 @@
       <div class="flex-none gap-2">
         <div class="dropdown dropdown-end">
           <div tabindex="0" role="button" class="btn gap-2 btn-ghost">
-            <div class="placeholder avatar">
+            <div class="avatar avatar-placeholder">
               <div class="w-8 rounded-full bg-primary text-primary-content">
                 <span class="text-sm font-bold"
                   >{data.adminName?.charAt(0).toUpperCase() || "A"}</span
@@ -165,7 +165,7 @@
 
     <aside class="flex min-h-screen w-72 flex-col border-r border-base-300 bg-base-100">
       <!-- Sidebar Header -->
-      <div class="border-b border-base-300 p-6">
+      <div class="border-b border-base-300 p-3">
         <a href="/admin" class="flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <ShieldCheck />

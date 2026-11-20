@@ -214,7 +214,6 @@ export default defineConfig({
   },
   fmt: {
     singleQuote: false,
-    printWidth: 100,
     sortPackageJson: true,
     sortTailwindcss: {
       stylesheet: "./src/routes/layout.css",

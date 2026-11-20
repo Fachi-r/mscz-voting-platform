@@ -218,7 +218,7 @@
             <tr class="hover">
               <td>
                 <div class="flex items-center gap-3">
-                  <div class="placeholder avatar">
+                  <div class="avatar avatar-placeholder">
                     <div class="w-10 rounded-full bg-neutral text-neutral-content">
                       <span class="text-xs font-bold"
                         >{m.name
