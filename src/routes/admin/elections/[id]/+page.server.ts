@@ -314,6 +314,7 @@ export const actions: Actions = {
     const f = await request.formData();
     const pollId = parseId(String(f.get("pollId")));
     const name = String(f.get("name") ?? "").trim();
+    const nrc = String(f.get("nrc") ?? "").trim();
     const image = String(f.get("image") ?? "").trim() || null;
 
     if (!name || name.length > 120) {
@@ -332,7 +333,7 @@ export const actions: Actions = {
         .where(and(eq(polls.id, pollId), eq(polls.electionId, electionId)));
       if (!poll) throw new EditError(400, "That position doesn't belong to this election.");
 
-      await tx.insert(candidates).values({ pollId, name, image });
+      await tx.insert(candidates).values({ pollId, name, nrc, image });
     });
   },
 

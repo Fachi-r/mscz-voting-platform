@@ -43,6 +43,7 @@
     "eslint-plugin-svelte": "^3.19.0",
     "globals": "^17.6.0",
     "postgres": "^3.4.9",
+    "repomix": "^1.19.0",
     "svelte": "^5.57.2",
     "svelte-check": "^4.6.0",
     "tailwindcss": "^4.3.0",

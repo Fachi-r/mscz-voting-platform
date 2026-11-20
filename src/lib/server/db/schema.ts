@@ -82,6 +82,7 @@ export const candidates = pgTable(
       .notNull()
       .references(() => polls.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    nrc: text("nrc").notNull(),
     image: text("image"),
   },
   (table) => [

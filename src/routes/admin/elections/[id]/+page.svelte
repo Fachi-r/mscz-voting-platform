@@ -406,7 +406,7 @@
               >
                 <input type="hidden" name="pollId" value={poll.id} />
                 <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
-                  <div class="form-control md:col-span-5">
+                  <div class="form-control md:col-span-3">
                     <label for="name-{poll.id}" class="label py-1"
                       ><span class="label-text text-xs font-semibold uppercase">Candidate Name</span
                       ></label
@@ -420,7 +420,21 @@
                       class="input-bordered input w-full input-sm"
                     />
                   </div>
-                  <div class="form-control md:col-span-5">
+                  <div class="form-control md:col-span-3">
+                    <label for="nrc-{poll.id}" class="label py-1"
+                      ><span class="label-text text-xs font-semibold uppercase">Candidate NRC</span
+                      ></label
+                    >
+                    <input
+                      id="nrc-{poll.id}"
+                      name="nrc"
+                      required
+                      maxlength="11"
+                      placeholder="123456/78/9"
+                      class="input-bordered input w-full input-sm"
+                    />
+                  </div>
+                  <div class="form-control md:col-span-3">
                     <label for="image-{poll.id}" class="label py-1"
                       ><span class="label-text text-xs font-semibold uppercase"
                         >Photo URL (Optional)</span
