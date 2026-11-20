@@ -81,14 +81,60 @@ export const candidates = pgTable(
     pollId: integer("poll_id")
       .notNull()
       .references(() => polls.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
+
+    // Identity (split per form)
+    surname: text("surname").notNull(),
+    givenNames: text("given_names").notNull(),
     nrc: text("nrc").notNull(),
+
+    // MSCZ membership
+    msczMembershipNumber: text("mscz_membership_number").notNull(),
+    msczMembershipEvidence: text("mscz_membership_evidence"),
+
+    // Eligibility declarations (as declared by candidate)
+    isPaidUp: boolean("is_paid_up").notNull().default(false),
+    isContinuousMember2Years: boolean("is_continuous_member_2_years").notNull().default(false),
+    isAssociateMember: boolean("is_associate_member").notNull().default(false),
+    hasDisciplinaryRecord: boolean("has_disciplinary_record").notNull().default(false),
+
+    // Full details
+    highestQualification: text("highest_qualification").notNull(),
+    address: text("address"),
+
+    // Media
     image: text("image"),
+
+    // Undertaking
+    signature: text("signature"),
+    signedAt: timestamp("signed_at", { withTimezone: true }),
+
+    // Review workflow
+    status: text("status").notNull().default("submitted"),
+    invalidReason: text("invalid_reason"),
+    receivedAt: timestamp("received_at", { withTimezone: true }),
+    receivedVia: text("received_via"),
+    receivedBy: text("received_by"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+
+    // Runoff lineage
+    sourceCandidateId: integer("source_candidate_id").references((): AnyPgColumn => candidates.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("candidates_pollId_idx").on(table.pollId),
-    // Target for votes' composite FK (candidate must belong to the poll)
     unique("candidates_id_pollId_unique").on(table.id, table.pollId),
+    // One person per poll (defends against accidental duplicate submissions)
+    unique("candidates_poll_nrc_unique").on(table.pollId, table.nrc),
+    check(
+      "candidates_status_chk",
+      sql`${table.status} IN ('submitted','under_review','valid','invalid','elected_unopposed')`,
+    ),
+    check(
+      "candidates_invalid_reason_chk",
+      sql`(${table.status} <> 'invalid') OR (${table.invalidReason} IS NOT NULL)`,
+    ),
   ],
 );
 

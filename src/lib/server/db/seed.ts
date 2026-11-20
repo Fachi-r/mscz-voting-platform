@@ -63,6 +63,7 @@ async function main() {
       nrc: "100001/10/1",
       isVerified: true,
       role: "admin", // Uncomment if you use Better Auth's admin plugin
+      msczMembershipNumber: "MSCZ-2026-0412",
     },
     {
       id: "seed-verified-user",
@@ -71,6 +72,7 @@ async function main() {
       emailVerified: true,
       nrc: "100002/10/1",
       isVerified: true,
+      msczMembershipNumber: "MSCZ-2023-0194",
     },
     {
       id: "seed-unverified-user",
@@ -79,6 +81,7 @@ async function main() {
       emailVerified: true,
       nrc: "100003/10/1",
       isVerified: false,
+      msczMembershipNumber: "MSCZ-2025-0412",
     },
   ];
 
@@ -178,35 +181,182 @@ async function main() {
 
   const allPolls = [chairPoll, deputyPoll, committeePoll, deputyRunoffPoll];
 
-  // 4. Seed Candidates per Poll (with realistic Zambian NRC numbers)
+  // 4. Seed Candidates per Poll (with MSCZ membership, review statuses & runoff lineage)
   console.log("Seeding candidates...");
+
   const candidatePool = [
-    { name: "Chanda Mwale", nrc: "148291/10/1" },
-    { name: "Mutale Banda", nrc: "209482/11/1" },
-    { name: "Bwalya Phiri", nrc: "319402/61/1" },
-    { name: "Thabo Zulu", nrc: "184920/10/1" },
-    { name: "Natasha Tembo", nrc: "274910/16/1" },
-    { name: "Kabwe Mulenga", nrc: "193847/31/1" },
+    {
+      surname: "Mwale",
+      givenNames: "Chanda",
+      nrc: "148291/10/1",
+      msczMembershipNumber: "MSCZ-2019-0412",
+      highestQualification: "MSc Computer Science",
+      address: "Plot 412, Kabulonga, Lusaka",
+    },
+    {
+      surname: "Banda",
+      givenNames: "Mutale",
+      nrc: "209482/11/1",
+      msczMembershipNumber: "MSCZ-2020-0881",
+      highestQualification: "BSc Information Technology",
+      address: "House 19, Woodlands, Lusaka",
+    },
+    {
+      surname: "Phiri",
+      givenNames: "Bwalya",
+      nrc: "319402/61/1",
+      msczMembershipNumber: "MSCZ-2018-0194",
+      highestQualification: "PhD Software Engineering",
+      address: "Plot 88, Nkana East, Kitwe",
+    },
+    {
+      surname: "Zulu",
+      givenNames: "Thabo",
+      nrc: "184920/10/1",
+      msczMembershipNumber: "MSCZ-2021-1104",
+      highestQualification: "BSc Computer Systems Engineering",
+      address: "Flat 4B, Rhodes Park, Lusaka",
+    },
+    {
+      surname: "Tembo",
+      givenNames: "Natasha",
+      nrc: "274910/16/1",
+      msczMembershipNumber: "MSCZ-2020-0530",
+      highestQualification: "MSc Information Security",
+      address: "Plot 204, Kansenshi, Ndola",
+    },
+    {
+      surname: "Mulenga",
+      givenNames: "Kabwe",
+      nrc: "193847/31/1",
+      msczMembershipNumber: "MSCZ-2022-1492",
+      highestQualification: "BEng Telecommunications",
+      address: "House 7, Chalala, Lusaka",
+    },
   ];
 
-  const candidatesByPoll = new Map<number, (typeof schema.candidates.$inferSelect)[]>();
+  // Only store 'valid' candidates in this map so votes are cast exclusively for approved candidates
+  const validCandidatesByPoll = new Map<number, (typeof schema.candidates.$inferSelect)[]>();
+  // Keep all inserted candidates by poll so runoff polls can link sourceCandidateId
+  const allCandidatesByPoll = new Map<number, (typeof schema.candidates.$inferSelect)[]>();
 
   for (const poll of allPolls) {
-    const count = poll.maxSelections === 3 ? 5 : 3;
-    const rows = Array.from({ length: count }, (_, idx) => {
+    // Handle runoff polls by linking top 2 valid candidates from the original poll
+    if (poll.isRunoff && poll.runoffOfPollId) {
+      const originalValid = validCandidatesByPoll.get(poll.runoffOfPollId) ?? [];
+      const runoffContenders = originalValid.slice(0, 2);
+
+      const runoffRows: (typeof schema.candidates.$inferInsert)[] = runoffContenders.map(
+        (orig) => ({
+          pollId: poll.id,
+          surname: orig.surname,
+          givenNames: orig.givenNames,
+          nrc: orig.nrc,
+          msczMembershipNumber: orig.msczMembershipNumber,
+          msczMembershipEvidence: orig.msczMembershipEvidence,
+          isPaidUp: true,
+          isContinuousMember2Years: true,
+          isAssociateMember: false,
+          hasDisciplinaryRecord: false,
+          highestQualification: orig.highestQualification,
+          address: orig.address,
+          image: orig.image,
+          signature: orig.signature,
+          signedAt: now,
+          status: "valid",
+          invalidReason: null,
+          receivedAt: now,
+          receivedVia: "runoff_carryover",
+          receivedBy: "seed-admin-user",
+          reviewedBy: "seed-admin-user",
+          reviewedAt: now,
+          sourceCandidateId: orig.id, // Satisfies runoff lineage FK
+        }),
+      );
+
+      const insertedRunoff = await db.insert(schema.candidates).values(runoffRows).returning();
+      allCandidatesByPoll.set(poll.id, insertedRunoff);
+      validCandidatesByPoll.set(poll.id, insertedRunoff);
+      continue;
+    }
+
+    // Standard polls: insert 3 valid candidates + 1 invalid/submitted candidate on active polls
+    const baseCount = poll.maxSelections === 3 ? 5 : 3;
+    const rows: (typeof schema.candidates.$inferInsert)[] = [];
+
+    for (let idx = 0; idx < baseCount; idx++) {
       const person = candidatePool[(poll.id + idx) % candidatePool.length];
-      return {
+      const submittedAt = new Date(now.getTime() - (20 - idx) * 24 * 60 * 60 * 1000);
+      const reviewedAt = new Date(submittedAt.getTime() + 12 * 60 * 60 * 1000);
+
+      rows.push({
         pollId: poll.id,
-        name: `${person.name} (${poll.position.split(" ")[0]})`,
+        surname: person.surname,
+        givenNames: person.givenNames,
         nrc: person.nrc,
+        msczMembershipNumber: person.msczMembershipNumber,
+        msczMembershipEvidence: `https://example.com{person.msczMembershipNumber}.pdf`,
+        isPaidUp: true,
+        isContinuousMember2Years: true,
+        isAssociateMember: false,
+        hasDisciplinaryRecord: false,
+        highestQualification: person.highestQualification,
+        address: person.address,
         image: null,
-      };
-    });
+        signature: `${person.givenNames} ${person.surname}`,
+        signedAt: submittedAt,
+        status: "valid",
+        invalidReason: null,
+        receivedAt: submittedAt,
+        receivedVia: idx % 2 === 0 ? "online_portal" : "email",
+        receivedBy: "seed-admin-user",
+        reviewedBy: "seed-admin-user",
+        reviewedAt,
+        sourceCandidateId: null,
+      });
+    }
+
+    // Add edge-case statuses ('invalid' & 'under_review') to the active poll for admin review UI testing
+    if (poll.electionId === activeElection.id) {
+      const extraPerson = candidatePool[(poll.id + baseCount) % candidatePool.length];
+      const submittedAt = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+
+      rows.push({
+        pollId: poll.id,
+        surname: extraPerson.surname,
+        givenNames: extraPerson.givenNames,
+        nrc: extraPerson.nrc,
+        msczMembershipNumber: extraPerson.msczMembershipNumber,
+        msczMembershipEvidence: null,
+        isPaidUp: false,
+        isContinuousMember2Years: false,
+        isAssociateMember: true,
+        hasDisciplinaryRecord: false,
+        highestQualification: extraPerson.highestQualification,
+        address: extraPerson.address,
+        image: null,
+        signature: `${extraPerson.givenNames} ${extraPerson.surname}`,
+        signedAt: submittedAt,
+        // Satisfies candidates_invalid_reason_chk (status = 'invalid' requires non-null invalidReason)
+        status: "invalid",
+        invalidReason:
+          "Applicant is an Associate Member and has not completed 2 continuous years as a paid-up Full Member.",
+        receivedAt: submittedAt,
+        receivedVia: "in_person",
+        receivedBy: "seed-admin-user",
+        reviewedBy: "seed-admin-user",
+        reviewedAt: new Date(submittedAt.getTime() + 4 * 60 * 60 * 1000),
+        sourceCandidateId: null,
+      });
+    }
 
     const inserted = await db.insert(schema.candidates).values(rows).returning();
-    candidatesByPoll.set(poll.id, inserted);
+    allCandidatesByPoll.set(poll.id, inserted);
+    validCandidatesByPoll.set(
+      poll.id,
+      inserted.filter((c) => c.status === "valid" || c.status === "elected_unopposed"),
+    );
   }
-
   // 5. Simulate Voters Casting Ballots & Anonymous Votes
   console.log("Seeding ballots and votes...");
   const ballotRows: (typeof schema.ballots.$inferInsert)[] = [];
@@ -242,7 +392,7 @@ async function main() {
         // 10% chance the voter abstains on this specific poll
         if (rand() < 0.1) continue;
 
-        const pollCandidates = [...(candidatesByPoll.get(poll.id) ?? [])];
+        const pollCandidates = [...(allCandidatesByPoll.get(poll.id) ?? [])];
         // Shuffle candidates deterministically
         for (let i = pollCandidates.length - 1; i > 0; i--) {
           const j = Math.floor(rand() * (i + 1));

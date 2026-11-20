@@ -32,8 +32,14 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      nrc: { type: "string", required: false, input: true },
+      nrc: { type: "string", required: false, input: true, unique: true },
       isVerified: { type: "boolean", defaultValue: false, input: false }, // critical
+      membershipNumber: {
+        type: "string",
+        required: true,
+        input: true,
+        unique: true,
+      },
     },
   },
   plugins: [
