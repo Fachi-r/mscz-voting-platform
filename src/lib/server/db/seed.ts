@@ -54,7 +54,7 @@ async function main() {
   // 1b. Seed known test accounts with password: "password123"
   console.log("Seeding test accounts...");
   const hashedPassword = await hashPassword("password123");
-  const testAccounts = [
+  const testAccounts: (typeof schema.user.$inferInsert)[] = [
     {
       id: "seed-admin-user",
       name: "Admin User",
@@ -63,7 +63,7 @@ async function main() {
       nrc: "100001/10/1",
       isVerified: true,
       role: "admin", // Uncomment if you use Better Auth's admin plugin
-      msczMembershipNumber: "MSCZ-2026-0412",
+      mcszMembershipNumber: "MSCZ-2026-0412",
     },
     {
       id: "seed-verified-user",
@@ -72,7 +72,7 @@ async function main() {
       emailVerified: true,
       nrc: "100002/10/1",
       isVerified: true,
-      msczMembershipNumber: "MSCZ-2023-0194",
+      mcszMembershipNumber: "MSCZ-2023-0194",
     },
     {
       id: "seed-unverified-user",
@@ -81,7 +81,7 @@ async function main() {
       emailVerified: true,
       nrc: "100003/10/1",
       isVerified: false,
-      msczMembershipNumber: "MSCZ-2025-0412",
+      mcszMembershipNumber: "MSCZ-2025-0412",
     },
   ];
 
