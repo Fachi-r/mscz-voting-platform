@@ -27,8 +27,9 @@ export interface PollResult {
 }
 
 /** Display name for a candidate. Client-safe: takes only the name columns. */
-export function candidateName(c: { surname: string; givenNames: string }): string {
-  return `${c.givenNames} ${c.surname}`;
+export function candidateName(c: { name?: string; surname?: string; givenNames?: string }): string {
+  if (c.givenNames && c.surname) return `${c.givenNames} ${c.surname}`;
+  return c.name || "Unknown Candidate";
 }
 
 /**

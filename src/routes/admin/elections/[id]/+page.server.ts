@@ -135,6 +135,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           nrc: candidates.nrc,
           status: candidates.status,
           image: candidates.image,
+          msczMembershipNumber: candidates.msczMembershipNumber,
+          highestQualification: candidates.highestQualification,
         })
         .from(candidates)
         .where(inArray(candidates.pollId, pollIds))
@@ -144,10 +146,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const candidateList = candidateRows.map((c) => ({
     id: c.id,
     pollId: c.pollId,
-    name: candidateName(c),
     nrc: c.nrc,
     status: c.status,
     image: c.image,
+    msczMembershipNumber: c.msczMembershipNumber,
+    highestQualification: c.highestQualification,
+    name: candidateName(c),
   }));
 
   // Turnout: visible live. It reveals how many voted, never what they chose.

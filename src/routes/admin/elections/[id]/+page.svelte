@@ -1,5 +1,6 @@
 <!-- src/routes/admin/elections/[id]/+page.svelte -->
 <script lang="ts">
+  import { candidateName } from "#lib/server/voting/results.ts";
   import { enhance, type SubmitFunction } from "$app/forms";
   import type { PageProps } from "./$types";
 
@@ -342,20 +343,40 @@
             {:else}
               <div class="mb-4 overflow-x-auto">
                 <table class="table table-sm">
+                  <thead>
+                    <tr class="text-xs text-base-content/60 uppercase">
+                      <th>Candidate</th>
+                      <th>NRC</th>
+                      <th>MSCZ No.</th>
+                      <th>Qualification</th>
+                      <th>Photo</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {#each poll.candidates as c (c.id)}
                       <tr class="hover">
-                        <td class="font-medium">{c.name}</td>
-                        <td class="text-sm text-base-content/60">
+                        <td class="text-sm font-medium">
+                          {c.name ?? ""}
+                        </td>
+                        <td class="font-mono text-xs">{c.nrc || "—"}</td>
+                        <td class="text-xs">{c.msczMembershipNumber || "—"}</td>
+                        <td
+                          class="max-w-37.5 truncate text-xs text-base-content/70"
+                          title={c.highestQualification}
+                        >
+                          {c.highestQualification || "—"}
+                        </td>
+                        <td>
                           {#if c.image}
                             <a
                               href={c.image}
                               target="_blank"
-                              class="flex link items-center gap-1 link-primary"
+                              class="flex link items-center gap-1 text-xs link-primary"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4"
+                                class="h-3 w-3"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -366,10 +387,10 @@
                                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                                 /></svg
                               >
-                              View Photo
+                              View
                             </a>
                           {:else}
-                            <span class="text-base-content/30">No photo</span>
+                            <span class="text-xs text-base-content/30">None</span>
                           {/if}
                         </td>
                         <td class="text-right">
@@ -377,7 +398,7 @@
                             <form
                               method="POST"
                               action="?/deleteCandidate"
-                              use:enhance={confirmFirst(`Remove candidate "${c.name}"?`)}
+                              use:enhance={confirmFirst(`Remove candidate "${candidateName(c)}"?`)}
                             >
                               <input type="hidden" name="candidateId" value={c.id} />
                               <button
@@ -396,76 +417,115 @@
               </div>
             {/if}
 
-            <!-- Add Candidate Form -->
+            <!-- Add Candidate Form (New Structure) -->
             {#if !data.locked}
               <form
                 method="POST"
                 action="?/addCandidate"
                 use:enhance
-                class="rounded-lg bg-base-200/50 p-4"
+                class="rounded-lg border border-base-300 bg-base-200/50 p-4"
               >
                 <input type="hidden" name="pollId" value={poll.id} />
-                <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
-                  <div class="form-control md:col-span-3">
-                    <label for="name-{poll.id}" class="label py-1"
-                      ><span class="label-text text-xs font-semibold uppercase">Candidate Name</span
+
+                <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div class="form-control">
+                    <label class="label py-1" for="givenNames"
+                      ><span class="label-text text-xs font-semibold uppercase">Given Names</span
                       ></label
                     >
                     <input
-                      id="name-{poll.id}"
-                      name="name"
+                      name="givenNames"
                       required
-                      maxlength="120"
-                      placeholder="e.g., Jane Mwamba"
+                      placeholder="e.g., Jane"
                       class="input-bordered input w-full input-sm"
                     />
                   </div>
-                  <div class="form-control md:col-span-3">
-                    <label for="nrc-{poll.id}" class="label py-1"
-                      ><span class="label-text text-xs font-semibold uppercase">Candidate NRC</span
+
+                  <div class="form-control">
+                    <label class="label py-1" for="surname"
+                      ><span class="label-text text-xs font-semibold uppercase">Surname</span
                       ></label
                     >
                     <input
-                      id="nrc-{poll.id}"
+                      name="surname"
+                      required
+                      placeholder="e.g., Mwamba"
+                      class="input-bordered input w-full input-sm"
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label py-1" for="nrc"
+                      ><span class="label-text text-xs font-semibold uppercase">NRC</span></label
+                    >
+                    <input
                       name="nrc"
                       required
-                      maxlength="11"
-                      placeholder="123456/78/9"
+                      placeholder="123456/78/1"
+                      class="input-bordered input w-full font-mono input-sm"
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label py-1" for="msczMembershipNumber"
+                      ><span class="label-text text-xs font-semibold uppercase"
+                        >MCSZ Membership No.</span
+                      ></label
+                    >
+                    <input
+                      name="msczMembershipNumber"
+                      required
+                      placeholder="e.g., MCSZ-2024-001"
                       class="input-bordered input w-full input-sm"
                     />
                   </div>
-                  <div class="form-control md:col-span-3">
-                    <label for="image-{poll.id}" class="label py-1"
+
+                  <div class="form-control">
+                    <label class="label py-1" for="highestQualification"
+                      ><span class="label-text text-xs font-semibold uppercase"
+                        >Highest Qualification</span
+                      ></label
+                    >
+                    <input
+                      name="highestQualification"
+                      required
+                      placeholder="e.g., Bachelor of Laws"
+                      class="input-bordered input w-full input-sm"
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label py-1" for="image"
                       ><span class="label-text text-xs font-semibold uppercase"
                         >Photo URL (Optional)</span
                       ></label
                     >
                     <input
-                      id="image-{poll.id}"
                       name="image"
                       type="url"
                       placeholder="https://example.com/photo.jpg"
                       class="input-bordered input w-full input-sm"
                     />
                   </div>
-                  <div class="md:col-span-2">
-                    <button type="submit" class="btn w-full gap-1 btn-primary btn-sm">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 4v16m8-8H4"
-                        /></svg
-                      >
-                      Add
-                    </button>
-                  </div>
+                </div>
+
+                <div class="flex justify-end">
+                  <button type="submit" class="btn gap-1 btn-primary btn-sm">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      ><path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      /></svg
+                    >
+                    Add Candidate
+                  </button>
                 </div>
               </form>
             {/if}
