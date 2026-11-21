@@ -18,7 +18,7 @@ export const user = pgTable("user", {
   banExpires: timestamp("ban_expires"),
   nrc: text("nrc").unique(),
   isVerified: boolean("is_verified").default(false).notNull(),
-  msczMembershipNumber: text("mscz_membership_number").notNull().unique(),
+  msczMembershipNumber: text("mscz_membership_number").unique(),
 });
 
 export const session = pgTable(

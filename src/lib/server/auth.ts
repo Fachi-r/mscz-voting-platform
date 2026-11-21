@@ -36,7 +36,7 @@ export const auth = betterAuth({
       isVerified: { type: "boolean", defaultValue: false, input: false }, // critical
       msczMembershipNumber: {
         type: "string",
-        required: true,
+        required: false,
         input: true,
         unique: true,
       },
