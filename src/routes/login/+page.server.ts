@@ -40,6 +40,8 @@ export const actions: Actions = {
     const email = formData.get("email")?.toString() ?? "";
     const password = formData.get("password")?.toString() ?? "";
     const name = formData.get("name")?.toString() ?? "";
+    const mcszMembershipNumber = formData.get("mcszMembershipNumber")?.toString() ?? "";
+    const nrc = formData.get("nrc")?.toString() ?? "";
 
     try {
       await auth.api.signUpEmail({
@@ -47,6 +49,8 @@ export const actions: Actions = {
           email,
           password,
           name,
+          nrc,
+          mcszMembershipNumber,
           callbackURL: "/auth/verification-success",
         },
       });

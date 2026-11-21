@@ -1,8 +1,8 @@
 // src/lib/server/voting/cast-ballot.ts
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { user } from "../db/auth.schema";
-import { elections, polls, candidates, ballots, votes } from "../db/schema";
+import { ballots, candidates, elections, polls, votes } from "../db/schema";
 
 export type BallotErrorCode =
   | "VOTER_NOT_FOUND"
@@ -46,8 +46,12 @@ export interface CastBallotInput {
 }
 
 /**
- * Casts a complete ballot (every poll in the election) in ONE transaction:
- * either the voter's ballots and all their votes are recorded, or nothing is.
+ * Casts a complete ballot in ONE transaction: either the voter's ballots and all
+ * their votes are recorded, or nothing is.
+ *
+ * The ballot consists of every poll in the election that has at least one candidate
+ * with status = 'valid'. Positions with no valid candidates (empty, or elected
+ * unopposed) are not on the ballot and get no ballot row.
  */
 export async function castBallot({
   userId,
@@ -90,7 +94,8 @@ export async function castBallot({
     }
 
     // 3. Election must be open. DB clock + SHARE lock: voters don't block each
-    //    other, but an admin closing the election waits for in-flight ballots.
+    //    other, but an admin closing the election (or editing it) waits for
+    //    in-flight ballots.
     const [election] = await tx
       .select({
         isOpen: sql<boolean>`${elections.isClosed} = false AND now() >= ${elections.startsAt} AND now() < ${elections.endsAt}`,
@@ -104,7 +109,7 @@ export async function castBallot({
       throw new BallotError("ELECTION_NOT_OPEN", "This election is not open for voting.");
     }
 
-    // 4. The polls that make up this ballot
+    // 4. Work out the ballot: polls that have at least one VALID candidate
     const electionPolls = await tx
       .select({
         id: polls.id,
@@ -114,29 +119,39 @@ export async function castBallot({
       .from(polls)
       .where(eq(polls.electionId, electionId));
 
-    if (electionPolls.length === 0) {
-      throw new BallotError("ELECTION_NOT_FOUND", "This election has no positions yet.");
+    const validCandidates = electionPolls.length
+      ? await tx
+          .select({ id: candidates.id, pollId: candidates.pollId })
+          .from(candidates)
+          .where(
+            and(
+              inArray(
+                candidates.pollId,
+                electionPolls.map((p) => p.id),
+              ),
+              eq(candidates.status, "valid"),
+            ),
+          )
+      : [];
+
+    const validPairs = new Set(validCandidates.map((c) => `${c.pollId}:${c.id}`));
+    const pollsWithCandidates = new Set(validCandidates.map((c) => c.pollId));
+    const ballotPolls = electionPolls.filter((p) => pollsWithCandidates.has(p.id));
+
+    if (ballotPolls.length === 0) {
+      throw new BallotError("ELECTION_NOT_FOUND", "There is nothing to vote on in this election.");
     }
 
-    const pollIds = new Set(electionPolls.map((p) => p.id));
-    for (const pollId of chosen.keys()) {
-      if (!pollIds.has(pollId)) {
+    // Selections for a poll that isn't on the ballot are rejected (empty ones ignored)
+    const ballotPollIds = new Set(ballotPolls.map((p) => p.id));
+    for (const [pollId, ids] of chosen) {
+      if (!ballotPollIds.has(pollId) && ids.length > 0) {
         throw new BallotError("INVALID_SELECTION", "Your selections include an unknown position.");
       }
     }
 
-    // 5. Every chosen candidate must belong to the poll it was chosen in
-    const allChosenIds = [...chosen.values()].flat();
-    const validPairs = new Set<string>();
-    if (allChosenIds.length > 0) {
-      const rows = await tx
-        .select({ id: candidates.id, pollId: candidates.pollId })
-        .from(candidates)
-        .where(inArray(candidates.id, allChosenIds));
-      for (const r of rows) validPairs.add(`${r.pollId}:${r.id}`);
-    }
-
-    for (const poll of electionPolls) {
+    // 5. Limits and candidate validity per poll
+    for (const poll of ballotPolls) {
       const ids = chosen.get(poll.id) ?? [];
       if (ids.length > poll.maxSelections) {
         throw new BallotError(
@@ -154,20 +169,20 @@ export async function castBallot({
       }
     }
 
-    // 6. Participation: one ballot row per poll, including abstentions. The unique
-    //    (userId, pollId) index makes double-voting impossible, even concurrently.
+    // 6. Participation: one ballot row per poll on the ballot, including abstentions.
+    //    The unique (userId, pollId) index blocks double-voting, even concurrently.
     const inserted = await tx
       .insert(ballots)
-      .values(electionPolls.map((p) => ({ userId, pollId: p.id })))
+      .values(ballotPolls.map((p) => ({ userId, pollId: p.id })))
       .onConflictDoNothing()
       .returning({ id: ballots.id });
 
-    if (inserted.length !== electionPolls.length) {
+    if (inserted.length !== ballotPolls.length) {
       throw new BallotError("ALREADY_VOTED", "You have already voted in this election.");
     }
 
     // 7. Choices, with no link back to the voter
-    const voteRows = electionPolls.flatMap((p) =>
+    const voteRows = ballotPolls.flatMap((p) =>
       (chosen.get(p.id) ?? []).map((candidateId) => ({
         pollId: p.id,
         candidateId,

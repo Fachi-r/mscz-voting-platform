@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { Mail, Lock, setLucideProps, User, Search } from "@lucide/svelte";
+  import { Mail, Lock, setLucideProps, User, IdCard, Hash } from "@lucide/svelte";
   import type { ActionData } from "./$types";
 
   let { form }: { form: ActionData } = $props();
@@ -122,6 +122,33 @@
             <label class="input transition-colors">
               <User />
               <input type="text" name="name" placeholder="John Doe" class="grow bg-transparent" />
+            </label>
+          </div>
+
+          <!-- MCSZ Membership Number (Only visually prominent if registering, but kept in form for scaffolding) -->
+          <div class="form-control">
+            <span class="label-text font-medium"
+              >MCSZ Membership Number <span class="font-normal text-base-content/40"
+                >(Required for new registration)</span
+              ></span
+            >
+            <label class="input transition-colors">
+              <IdCard />
+              <input
+                type="text"
+                name="mcszMembershipNumber"
+                placeholder="MCSZ-2021-1234"
+                class="grow bg-transparent"
+              />
+            </label>
+          </div>
+
+          <!-- NRC Number -->
+          <div class="form-control">
+            <span class="label-text font-medium">NRC Number </span>
+            <label class="input transition-colors">
+              <Hash />
+              <input type="text" name="nrc" placeholder="123456/78/9" class="grow bg-transparent" />
             </label>
           </div>
 

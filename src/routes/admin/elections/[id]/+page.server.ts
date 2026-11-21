@@ -8,10 +8,13 @@ import {
 } from "#lib/server/admin.ts";
 import { user } from "#lib/server/db/auth.schema.ts";
 import { db } from "#lib/server/db/index.ts";
-import { ballots, candidates, elections, polls, votes } from "#lib/server/db/schema.ts";
+import { ballots, candidates, elections, polls } from "#lib/server/db/schema.ts";
+import { candidateName, loadElectionResults } from "#lib/server/voting/results.ts";
 import { error, fail } from "@sveltejs/kit";
 import { and, asc, count, countDistinct, eq, inArray, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
+
+const NRC_PATTERN = /^\d{6}\/\d{2}\/\d$/;
 
 function parseId(raw: string | null | undefined): number {
   const id = Number(raw);
@@ -22,8 +25,12 @@ function parseId(raw: string | null | undefined): number {
 // ---------------------------------------------------------------------------
 // Structural edits are only allowed while the election is open for editing:
 // not closed, and no ballot cast yet. The election row is locked FOR UPDATE, which
-// serializes against voters (who hold a SHARE lock), so a candidate can't be
-// added or removed while a ballot is being cast.
+// serializes against voters (who hold a SHARE lock), so nothing can change while a
+// ballot is being cast.
+//
+// ANY future action that changes a candidate's status (valid / invalid / ...) must
+// go through runEdit too, otherwise a candidate could lose validity after votes
+// for them were already cast.
 // ---------------------------------------------------------------------------
 class EditError extends Error {
   constructor(
@@ -116,18 +123,32 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
   const pollIds = pollList.map((p) => p.id);
 
-  const candidateList = pollIds.length
+  // Admins see every candidate, whatever their status. `name` is computed so
+  // existing templates that render `c.name` keep working.
+  const candidateRows = pollIds.length
     ? await db
         .select({
           id: candidates.id,
           pollId: candidates.pollId,
-          name: candidates.name,
+          surname: candidates.surname,
+          givenNames: candidates.givenNames,
+          nrc: candidates.nrc,
+          status: candidates.status,
           image: candidates.image,
         })
         .from(candidates)
         .where(inArray(candidates.pollId, pollIds))
         .orderBy(asc(candidates.id))
     : [];
+
+  const candidateList = candidateRows.map((c) => ({
+    id: c.id,
+    pollId: c.pollId,
+    name: candidateName(c),
+    nrc: c.nrc,
+    status: c.status,
+    image: c.image,
+  }));
 
   // Turnout: visible live. It reveals how many voted, never what they chose.
   const [turnout] = pollIds.length
@@ -144,32 +165,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
   const locked = election.isClosed || (turnout?.ballotRows ?? 0) > 0;
 
-  const pollsWithCandidates = pollList.map((p) => ({
-    ...p,
-    candidates: candidateList.filter((c) => c.pollId === p.id),
-  }));
-
   // Results are computed ONLY after the election is closed, even for admins.
-  let results: ReturnType<typeof buildResults> | null = null;
-  if (election.isClosed && pollIds.length) {
-    const tallies = await db
-      .select({
-        pollId: votes.pollId,
-        candidateId: votes.candidateId,
-        total: count(),
-      })
-      .from(votes)
-      .where(inArray(votes.pollId, pollIds))
-      .groupBy(votes.pollId, votes.candidateId);
-
-    const ballotCounts = await db
-      .select({ pollId: ballots.pollId, total: count() })
-      .from(ballots)
-      .where(inArray(ballots.pollId, pollIds))
-      .groupBy(ballots.pollId);
-
-    results = buildResults(pollsWithCandidates, tallies, ballotCounts);
-  }
+  const results = election.isClosed ? await loadElectionResults(electionId) : null;
 
   return {
     election: {
@@ -177,67 +174,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       startsInput: toLusakaInput(election.startsAt),
       endsInput: toLusakaInput(election.endsAt),
     },
-    polls: pollsWithCandidates,
+    polls: pollList.map((p) => ({
+      ...p,
+      candidates: candidateList.filter((c) => c.pollId === p.id),
+    })),
     voters: turnout?.voters ?? 0,
     eligible: eligible?.n ?? 0,
     locked,
     results,
   };
 };
-
-function buildResults(
-  pollList: {
-    id: number;
-    position: string;
-    maxSelections: number;
-    candidates: { id: number; name: string }[];
-  }[],
-  tallies: { pollId: number; candidateId: number; total: number }[],
-  ballotCounts: { pollId: number; total: number }[],
-) {
-  const tallyMap = new Map(tallies.map((t) => [`${t.pollId}:${t.candidateId}`, t.total]));
-  const ballotMap = new Map(ballotCounts.map((b) => [b.pollId, b.total]));
-
-  return pollList.map((poll) => {
-    const ballotTotal = ballotMap.get(poll.id) ?? 0;
-    const sorted = poll.candidates
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        votes: tallyMap.get(`${poll.id}:${c.id}`) ?? 0,
-      }))
-      .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name));
-
-    const seats = poll.maxSelections;
-    const cutoff = sorted[seats - 1]?.votes;
-    const next = sorted[seats]?.votes;
-    const tie = cutoff !== undefined && cutoff > 0 && next === cutoff;
-    const totalVotes = sorted.reduce((n, r) => n + r.votes, 0);
-
-    return {
-      pollId: poll.id,
-      position: poll.position,
-      seats,
-      ballots: ballotTotal,
-      totalVotes,
-      // Only derivable for single-choice polls
-      abstentions: seats === 1 ? ballotTotal - totalVotes : null,
-      // Integrity invariant: votes can never exceed ballots x seats
-      auditOk: totalVotes <= ballotTotal * seats,
-      tie,
-      rows: sorted.map((r, i) => ({
-        ...r,
-        pct: ballotTotal > 0 ? Math.round((r.votes / ballotTotal) * 1000) / 10 : 0,
-        status:
-          r.votes > 0 && tie && r.votes === cutoff
-            ? ("tied" as const)
-            : i < seats && r.votes > 0
-              ? ("elected" as const)
-              : ("" as const),
-      })),
-    };
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Actions
@@ -308,18 +254,33 @@ export const actions: Actions = {
     });
   },
 
+  // Temporary single-candidate form; bulk registration comes later. Candidates
+  // added here are recorded as already reviewed and valid.
   addCandidate: async ({ request, params, locals }) => {
-    requireAdmin(locals);
+    const admin = requireAdmin(locals);
     const electionId = parseId(params.id);
     const f = await request.formData();
-    const pollId = parseId(String(f.get("pollId")));
-    const name = String(f.get("name") ?? "").trim();
-    const nrc = String(f.get("nrc") ?? "").trim();
-    const image = String(f.get("image") ?? "").trim() || null;
+    const text = (key: string) => String(f.get(key) ?? "").trim();
 
-    if (!name || name.length > 120) {
+    const pollId = parseId(text("pollId"));
+    const surname = text("surname");
+    const givenNames = text("givenNames");
+    const nrc = text("nrc");
+    const msczMembershipNumber = text("msczMembershipNumber");
+    const highestQualification = text("highestQualification");
+    const image = text("image") || null;
+
+    if (!surname || !givenNames || surname.length > 100 || givenNames.length > 150) {
       return fail(400, {
-        message: "Enter a candidate name (max 120 characters).",
+        message: "Enter the candidate's surname and given names.",
+      });
+    }
+    if (!NRC_PATTERN.test(nrc)) {
+      return fail(400, { message: "NRC must be in the format 123456/78/1." });
+    }
+    if (!msczMembershipNumber || !highestQualification) {
+      return fail(400, {
+        message: "MCSZ membership number and highest qualification are required.",
       });
     }
     if (image && !validImageUrl(image)) {
@@ -333,7 +294,19 @@ export const actions: Actions = {
         .where(and(eq(polls.id, pollId), eq(polls.electionId, electionId)));
       if (!poll) throw new EditError(400, "That position doesn't belong to this election.");
 
-      await tx.insert(candidates).values({ pollId, name, nrc, image });
+      await tx.insert(candidates).values({
+        pollId,
+        surname,
+        givenNames,
+        nrc,
+        msczMembershipNumber,
+        highestQualification,
+        image,
+        status: "valid",
+        receivedVia: "admin",
+        reviewedBy: admin.id,
+        reviewedAt: new Date(),
+      });
     });
   },
 

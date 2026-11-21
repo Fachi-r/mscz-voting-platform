@@ -23,7 +23,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         .select({
           id: candidates.id,
           pollId: candidates.pollId,
-          name: candidates.name,
+          surname: candidates.surname,
+          givenNames: candidates.givenNames,
           image: candidates.image,
         })
         .from(candidates)
