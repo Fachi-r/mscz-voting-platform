@@ -28,7 +28,7 @@
       <a href="/" class="btn gap-2 btn-ghost text-xl font-bold">
         <span class="text-2xl">🗳️</span>
         <div class="flex flex-col items-start leading-none">
-          <span class="text-base">MCSZ</span>
+          <span class="text-base">MSCZ</span>
           <span class="text-xs font-normal text-base-content/60">Voting Portal</span>
         </div>
       </a>

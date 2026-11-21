@@ -40,7 +40,7 @@ export const actions: Actions = {
     const email = formData.get("email")?.toString() ?? "";
     const password = formData.get("password")?.toString() ?? "";
     const name = formData.get("name")?.toString() ?? "";
-    const mcszMembershipNumber = formData.get("mcszMembershipNumber")?.toString() ?? "";
+    const msczMembershipNumber = formData.get("msczMembershipNumber")?.toString() ?? "";
     const nrc = formData.get("nrc")?.toString() ?? "";
 
     try {
@@ -50,7 +50,7 @@ export const actions: Actions = {
           password,
           name,
           nrc,
-          mcszMembershipNumber,
+          msczMembershipNumber,
           callbackURL: "/auth/verification-success",
         },
       });

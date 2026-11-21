@@ -63,7 +63,7 @@ async function main() {
       nrc: "100001/10/1",
       isVerified: true,
       role: "admin", // Uncomment if you use Better Auth's admin plugin
-      mcszMembershipNumber: "MSCZ-2026-0412",
+      msczMembershipNumber: "MSCZ-2026-0412",
     },
     {
       id: "seed-verified-user",
@@ -72,7 +72,7 @@ async function main() {
       emailVerified: true,
       nrc: "100002/10/1",
       isVerified: true,
-      mcszMembershipNumber: "MSCZ-2023-0194",
+      msczMembershipNumber: "MSCZ-2023-0194",
     },
     {
       id: "seed-unverified-user",
@@ -81,7 +81,7 @@ async function main() {
       emailVerified: true,
       nrc: "100003/10/1",
       isVerified: false,
-      mcszMembershipNumber: "MSCZ-2025-0412",
+      msczMembershipNumber: "MSCZ-2025-0412",
     },
   ];
 

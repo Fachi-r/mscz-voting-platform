@@ -22,7 +22,7 @@
     </section>
   {:else}
     <p>
-      To vote in MCSZ elections, enter your National Registration Card (NRC) number. An
+      To vote in MSCZ elections, enter your National Registration Card (NRC) number. An
       administrator will check it against the membership register.
     </p>
 

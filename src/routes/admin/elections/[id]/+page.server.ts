@@ -284,7 +284,7 @@ export const actions: Actions = {
     }
     if (!msczMembershipNumber || !highestQualification) {
       return fail(400, {
-        message: "MCSZ membership number and highest qualification are required.",
+        message: "MSCZ membership number and highest qualification are required.",
       });
     }
     if (image && !validImageUrl(image)) {

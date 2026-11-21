@@ -7,7 +7,7 @@
     {
       num: "1",
       title: "Accreditation",
-      desc: "Verify your identity using your MCSZ-issued credentials or national ID.",
+      desc: "Verify your identity using your MSCZ-issued credentials or national ID.",
     },
     {
       num: "2",
@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-  <title>MCSZ Secure Voting Portal</title>
+  <title>MSCZ Secure Voting Portal</title>
   <meta
     name="description"
     content="Official secure internal voting platform for the Media Self-Regulation Council of Zambia."
@@ -67,7 +67,7 @@
         <p class="py-4 text-lg leading-relaxed text-base-content/70 md:text-xl">
           The official digital voting infrastructure for the <span
             class="font-semibold text-base-content"
-            >Media Self-Regulation Council of Zambia (MCSZ)</span
+            >Media Self-Regulation Council of Zambia (MSCZ)</span
           >. Ensuring integrity, anonymity, and accessibility for all accredited members.
         </p>
         <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
@@ -146,10 +146,10 @@
     <nav class="mt-4 grid grid-flow-col gap-6 text-sm">
       <a href="/privacy" class="link link-hover">Privacy Policy</a>
       <a href="/electoral-guidelines" class="link link-hover">Electoral Guidelines</a>
-      <a href="mailto:support@mcsz.org.zm" class="link link-hover">Technical Support</a>
+      <a href="mailto:support@mscz.org.zm" class="link link-hover">Technical Support</a>
     </nav>
     <aside class="mt-6 text-xs text-base-content/40">
-      © {new Date().getFullYear()} MCSZ. All rights reserved. Secured by SvelteKit & Web Crypto API.
+      © {new Date().getFullYear()} MSCZ. All rights reserved. Secured by SvelteKit & Web Crypto API.
     </aside>
   </footer>
 </div>

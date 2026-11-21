@@ -35,7 +35,7 @@
 </script>
 
 <svelte:head>
-  <title>Active Elections | MCSZ Voting Portal</title>
+  <title>Active Elections | MSCZ Voting Portal</title>
 </svelte:head>
 
 <div class="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
@@ -60,7 +60,7 @@
         Elections
       </h1>
       <p class="mt-1 text-base-content/60">
-        View and participate in official MCSZ internal elections.
+        View and participate in official MSCZ internal elections.
       </p>
     </div>
   </div>
@@ -109,7 +109,7 @@
       <div>
         <h3 class="font-bold">Verification Pending</h3>
         <div class="text-sm">
-          Your membership is currently awaiting verification by an MCSZ administrator. You will be
+          Your membership is currently awaiting verification by an MSCZ administrator. You will be
           able to vote as soon as your NRC is approved.
         </div>
       </div>
@@ -342,7 +342,7 @@
     <div class="text-center text-sm text-base-content/50">
       <p>
         Need help? Contact the
-        <a href="mailto:support@mscz.org.zm" class="link link-primary">MCSZ Technical Support</a>
+        <a href="mailto:support@mscz.org.zm" class="link link-primary">MSCZ Technical Support</a>
         or review the
         <a href="/electoral-guidelines" class="link link-primary">Electoral Guidelines</a>.
       </p>

@@ -116,7 +116,7 @@ async function main() {
       nrc: "100001/10/1",
       isVerified: true,
       role: "admin",
-      mcszMembershipNumber: `MCSZ-2024-${Math.floor(Math.random() * 10000)}`,
+      msczMembershipNumber: `MSCZ-2024-${Math.floor(Math.random() * 10000)}`,
     },
     {
       id: "seed-verified-user",
@@ -125,7 +125,7 @@ async function main() {
       nrc: "100002/10/1",
       isVerified: true,
       role: "voter",
-      mcszMembershipNumber: `MCSZ-2024-${Math.floor(Math.random() * 10000)}`,
+      msczMembershipNumber: `MSCZ-2024-${Math.floor(Math.random() * 10000)}`,
     },
     {
       id: "seed-unverified-user",
@@ -134,7 +134,7 @@ async function main() {
       nrc: "100003/10/1",
       isVerified: false,
       role: "voter",
-      mcszMembershipNumber: `MCSZ-2024-${Math.floor(Math.random() * 10000)}`,
+      msczMembershipNumber: `MSCZ-2024-${Math.floor(Math.random() * 10000)}`,
     },
     {
       id: "seed-new-user",
@@ -143,7 +143,7 @@ async function main() {
       nrc: null,
       isVerified: false,
       role: "voter",
-      mcszMembershipNumber: `MCSZ-2024-${Math.floor(Math.random() * 10000)}`,
+      msczMembershipNumber: `MSCZ-2024-${Math.floor(Math.random() * 10000)}`,
     },
   ];
 
@@ -158,7 +158,7 @@ async function main() {
     updatedAt: new Date(),
     role: "voter",
     isVerified: (i + 1) % 10 !== 0,
-    mcszMembershipNumber: `MCSZ-2024-${1000 + i}`,
+    msczMembershipNumber: `MSCZ-2024-${1000 + i}`,
     password: hashedPassword,
   }));
 
@@ -327,7 +327,7 @@ async function main() {
           surname: p.surname,
           givenNames: p.givenNames,
           nrc: p.nrc,
-          msczMembershipNumber: `MCSZ-${1000 + personIdx}`,
+          msczMembershipNumber: `MSCZ-${1000 + personIdx}`,
           highestQualification: p.qual,
           isPaidUp: true,
           isContinuousMember2Years: true,

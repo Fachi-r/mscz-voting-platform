@@ -54,7 +54,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.election.title} | MCSZ Voting</title>
+  <title>{data.election.title} | MSCZ Voting</title>
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
@@ -268,7 +268,7 @@
       <div>
         <h3 class="font-bold">Verification Required</h3>
         <div class="text-sm">
-          Your membership has not been verified yet. Please contact the MCSZ administrators to have
+          Your membership has not been verified yet. Please contact the MSCZ administrators to have
           your NRC verified before you can vote.
         </div>
       </div>

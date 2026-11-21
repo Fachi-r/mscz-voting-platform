@@ -56,7 +56,7 @@
 </script>
 
 <svelte:head>
-  <title>Member Management · MCSZ Admin</title>
+  <title>Member Management · MSCZ Admin</title>
 </svelte:head>
 
 <!-- Header -->
@@ -79,7 +79,7 @@
     Member Management
   </h1>
   <p class="mt-2 max-w-3xl text-base-content/60">
-    Verify each member's National Registration Card (NRC) against the official MCSZ membership
+    Verify each member's National Registration Card (NRC) against the official MSCZ membership
     register.
     <span class="font-semibold text-base-content/80"
       >Only verified members are eligible to vote.</span

@@ -16,7 +16,7 @@
 </script>
 
 <svelte:head>
-  <title>Secure Login | MCSZ Voting Portal</title>
+  <title>Secure Login | MSCZ Voting Portal</title>
 </svelte:head>
 
 <div
@@ -48,7 +48,7 @@
           />
         </svg>
       </div>
-      <h1 class="text-3xl font-bold text-base-content">MCSZ Voting Portal</h1>
+      <h1 class="text-3xl font-bold text-base-content">MSCZ Voting Portal</h1>
       <p class="mt-2 text-base-content/60">
         Secure access for accredited members and returning officers.
       </p>
@@ -87,7 +87,7 @@
               <input
                 type="email"
                 name="email"
-                placeholder="name@mcsz.org.zm"
+                placeholder="name@mscz.org.zm"
                 class="grow bg-transparent"
                 required
               />
@@ -125,10 +125,10 @@
             </label>
           </div>
 
-          <!-- MCSZ Membership Number (Only visually prominent if registering, but kept in form for scaffolding) -->
+          <!-- MSCZ Membership Number (Only visually prominent if registering, but kept in form for scaffolding) -->
           <div class="form-control">
             <span class="label-text font-medium"
-              >MCSZ Membership Number <span class="font-normal text-base-content/40"
+              >MSCZ Membership Number <span class="font-normal text-base-content/40"
                 >(Required for new registration)</span
               ></span
             >
@@ -136,8 +136,8 @@
               <IdCard />
               <input
                 type="text"
-                name="mcszMembershipNumber"
-                placeholder="MCSZ-2021-1234"
+                name="msczMembershipNumber"
+                placeholder="MSCZ-2021-1234"
                 class="grow bg-transparent"
               />
             </label>

@@ -58,7 +58,7 @@
 </script>
 
 <svelte:head>
-  <title>MCSZ Admin Dashboard</title>
+  <title>MSCZ Admin Dashboard</title>
 </svelte:head>
 
 <div class="drawer min-h-screen bg-base-200 lg:drawer-open">
@@ -119,7 +119,7 @@
             <li class="px-3 py-1">
               <div class="text-sm font-semibold">{data.adminName}</div>
               <div class="text-xs text-base-content/60">
-                {data.adminName || "admin@mcsz.org.zm"}
+                {data.adminName || "admin@mscz.org.zm"}
               </div>
             </li>
             <div class="divider my-1"></div>
@@ -154,7 +154,7 @@
       class="footer footer-center border-t border-base-300 bg-base-100 p-4 text-sm text-base-content/60"
     >
       <aside>
-        <p>© {new Date().getFullYear()} MCSZ Admin Portal • Version 1.0.0</p>
+        <p>© {new Date().getFullYear()} MSCZ Admin Portal • Version 1.0.0</p>
       </aside>
     </footer>
   </div>
@@ -171,7 +171,7 @@
             <ShieldCheck />
           </div>
           <div>
-            <div class="text-lg font-bold">MCSZ Admin</div>
+            <div class="text-lg font-bold">MSCZ Admin</div>
             <div class="text-xs text-base-content/60">Returning Officer Portal</div>
           </div>
         </a>

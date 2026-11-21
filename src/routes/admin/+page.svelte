@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head>
-  <title>Admin Dashboard · Elections | MCSZ</title>
+  <title>Admin Dashboard · Elections | MSCZ</title>
 </svelte:head>
 
 <!-- Page Header -->
@@ -64,7 +64,7 @@
       Election Management
     </h1>
     <p class="mt-1 text-base-content/60">
-      Create, monitor, and manage all MCSZ internal elections.
+      Create, monitor, and manage all MSCZ internal elections.
     </p>
   </div>
 
@@ -341,7 +341,7 @@
             type="text"
             required
             maxlength="200"
-            placeholder="MCSZ Executive Committee Elections 2026"
+            placeholder="MSCZ Executive Committee Elections 2026"
             class="input-bordered input w-full bg-base-200/50 transition-colors focus:bg-base-100"
           />
           <label class="label">

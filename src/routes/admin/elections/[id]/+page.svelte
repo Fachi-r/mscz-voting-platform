@@ -44,7 +44,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.election.title} · MCSZ Admin</title>
+  <title>{data.election.title} · MSCZ Admin</title>
 </svelte:head>
 
 <!-- Breadcrumb & Header -->
@@ -469,13 +469,13 @@
                   <div class="form-control">
                     <label class="label py-1" for="msczMembershipNumber"
                       ><span class="label-text text-xs font-semibold uppercase"
-                        >MCSZ Membership No.</span
+                        >MSCZ Membership No.</span
                       ></label
                     >
                     <input
                       name="msczMembershipNumber"
                       required
-                      placeholder="e.g., MCSZ-2024-001"
+                      placeholder="e.g., MSCZ-2024-001"
                       class="input-bordered input w-full input-sm"
                     />
                   </div>
