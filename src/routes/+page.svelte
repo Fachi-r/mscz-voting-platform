@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Eye, Lock, Zap } from "@lucide/svelte";
   import { cubicOut } from "svelte/easing";
-  import { fade, fly } from "svelte/transition";
+  import { fly } from "svelte/transition";
 
   const steps = [
     {

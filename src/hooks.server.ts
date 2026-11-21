@@ -7,11 +7,19 @@ import { svelteKitHandler } from "better-auth/svelte-kit";
 
 // 1. Load the session onto event.locals for every request
 const loadSession: Handle = async ({ event, resolve }) => {
-  const session = await auth.api.getSession({ headers: event.request.headers });
+  if (building) return resolve(event);
 
-  if (session) {
-    event.locals.session = session.session;
-    event.locals.user = session.user;
+  try {
+    const session = await auth.api.getSession({
+      headers: event.request.headers,
+    });
+
+    if (session) {
+      event.locals.session = session.session;
+      event.locals.user = session.user;
+    }
+  } catch (err) {
+    console.error("Failed to load session:", err);
   }
 
   return resolve(event);

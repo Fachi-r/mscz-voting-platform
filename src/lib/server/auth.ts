@@ -34,7 +34,7 @@ export const auth = betterAuth({
     additionalFields: {
       nrc: { type: "string", required: false, input: true, unique: true },
       isVerified: { type: "boolean", defaultValue: false, input: false }, // critical
-      membershipNumber: {
+      mcszMembershipNumber: {
         type: "string",
         required: true,
         input: true,
