@@ -1,5 +1,21 @@
 <!-- src/routes/elections/+page.svelte -->
 <script lang="ts">
+  import {
+    AlignEndHorizontal,
+    Archive,
+    Calendar,
+    CalendarCheck,
+    CalendarX,
+    CalendarX2,
+    CircleAlert,
+    CircleCheck,
+    Clipboard,
+    ClipboardCheck,
+    Clock,
+    Eye,
+    Info,
+    TriangleAlert,
+  } from "@lucide/svelte";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
@@ -10,27 +26,22 @@
     timeStyle: "short",
   });
 
-  // Helper to determine badge color based on status
-  function getStatusBadgeClass(status: string): string {
-    const statusMap: Record<string, string> = {
-      upcoming: "badge-info",
-      open: "badge-success",
-      active: "badge-success", // Handle both 'open' and 'active' if your backend uses either
-      ended: "badge-warning",
-      closed: "badge-neutral",
-    };
-    return statusMap[status.toLowerCase()] || "badge-ghost";
-  }
+  type StatusConfig = {
+    class: string;
+    icon: typeof Clock;
+  };
 
-  function getStatusIcon(status: string): string {
-    const iconMap: Record<string, string> = {
-      upcoming: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      open: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      active: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      ended: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      closed: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>`,
-    };
-    return iconMap[status.toLowerCase()] || "";
+  const statusMap: Record<string, StatusConfig> = {
+    upcoming: { class: "badge-info", icon: Clock },
+    open: { class: "badge-success", icon: CircleCheck },
+    active: { class: "badge-success", icon: CircleCheck },
+    ended: { class: "badge-warning", icon: CircleAlert },
+    closed: { class: "badge-neutral", icon: Archive },
+  };
+
+  // Helper to determine badge color and icon based on status
+  function getStatusConfig(status: string): StatusConfig {
+    return statusMap[status.toLowerCase()] || { class: "badge-info", icon: Info };
   }
 </script>
 
@@ -43,20 +54,7 @@
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
       <h1 class="flex items-center gap-3 text-3xl font-bold text-base-content">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-8 w-8 text-primary"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-          />
-        </svg>
+        <ClipboardCheck class="size-7 stroke-[2.25] text-primary" />
         Elections
       </h1>
       <p class="mt-1 text-base-content/60">
@@ -68,24 +66,12 @@
   <!-- Account Status Alerts -->
   {#if data.needsNrc}
     <div class="alert alert-warning shadow-md">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 shrink-0 stroke-current"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      </svg>
+      <TriangleAlert size={24} />
       <div>
         <h3 class="font-bold">Action Required</h3>
         <div class="text-sm">
           To take part in elections, you must first
-          <a href="/onboarding" class="link font-semibold link-warning underline"
+          <a href="/onboarding" class="link font-semibold link-secondary underline"
             >add your National Registration Card (NRC)</a
           >.
         </div>
@@ -93,19 +79,7 @@
     </div>
   {:else if !data.isVerified}
     <div class="alert alert-info shadow-md">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-6 w-6 shrink-0 stroke-current"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path>
-      </svg>
+      <Info class="size-6 shrink-0 stroke-current" />
       <div>
         <h3 class="font-bold">Verification Pending</h3>
         <div class="text-sm">
@@ -122,20 +96,7 @@
       <!-- Empty State -->
       <div class="flex flex-col items-center justify-center py-16 text-center">
         <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-base-200">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-8 w-8 text-base-content/40"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
+          <Clipboard class="size-8 text-base-content/40" />
         </div>
         <h3 class="mb-1 text-lg font-semibold text-base-content/80">No Elections Available</h3>
         <p class="max-w-sm text-sm text-base-content/60">
@@ -158,6 +119,7 @@
           </thead>
           <tbody>
             {#each data.elections as e (e.id)}
+              {@const status = getStatusConfig(e.status)}
               <tr class="hover">
                 <!-- Election Title -->
                 <td>
@@ -171,37 +133,11 @@
                 <td class="hidden md:table-cell">
                   <div class="flex flex-col gap-1 text-sm text-base-content/80">
                     <div class="flex items-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-3.5 w-3.5 text-base-content/40"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <Calendar class="size-4 text-base-content/40" />
                       Opens: {fmt.format(e.startsAt)}
                     </div>
                     <div class="flex items-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-3.5 w-3.5 text-base-content/40"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                      <CalendarX2 class="size-4 text-base-content/40" />
                       Closes: {fmt.format(e.endsAt)}
                     </div>
                   </div>
@@ -209,8 +145,8 @@
 
                 <!-- Status Badge -->
                 <td>
-                  <span class="badge {getStatusBadgeClass(e.status)} gap-1 text-xs">
-                    {@html getStatusIcon(e.status)}
+                  <span class={["badge gap-1 text-xs", status.class]}>
+                    <status.icon size={14} class="stroke-[2.25]" />
                     <span class="capitalize">{e.status}</span>
                   </span>
                 </td>
@@ -219,38 +155,13 @@
                 <td>
                   {#if e.hasVoted}
                     <span class="flex items-center gap-1.5 text-sm font-medium text-success">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                      <CircleCheck class="size-4" />
                       Voted
                     </span>
                   {:else if e.status === "open"}
                     <span class="flex items-center gap-1.5 text-sm font-medium text-warning">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                      <CircleAlert class="size-4" />
+
                       Not voted yet
                     </span>
                   {:else}
@@ -266,63 +177,23 @@
                         href="/elections/{e.id}"
                         class="btn gap-1 btn-ghost text-success btn-sm hover:bg-success/10"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          class="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
+                        <Eye class="size-4" />
                         View Ballot
                       </a>
                     {:else}
                       <a href="/elections/{e.id}" class="btn gap-1 shadow-sm btn-primary btn-sm">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          class="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                          />
-                        </svg>
+                        <Clipboard class="size-4" />
                         Vote Now
                       </a>
                     {/if}
                   {:else if e.status === "closed"}
                     <a href="/elections/{e.id}/results" class="btn gap-1 btn-outline btn-sm">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
+                      <!-- <Podium class="size-4" /> -->
+                      <!-- <ChartColumnBig class="size-4" /> -->
+                      <!-- <SlidersHorizontal class="size-4" /> -->
+                      <!-- <ChartArea class="size-4" /> -->
+                      <!-- <ChartBarBig class="size-4" /> -->
+                      <AlignEndHorizontal class="size-4" />
                       Results
                     </a>
                   {:else}

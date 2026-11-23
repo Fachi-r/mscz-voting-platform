@@ -52,16 +52,16 @@
   <!-- Hero Section -->
   <div class="relative hero min-h-[70vh] overflow-hidden bg-base-200">
     <div
-      class="absolute inset-0 bg-[radial-gradient(#444cf7_1px,transparent_1px)] bg-size-[20px_20px] opacity-[0.03]"
+      class="absolute inset-0 bg-[radial-gradient(#444cf7_1px,transparent_1px)] bg-size-[20px_20px] opacity-[0.1]"
     ></div>
 
     <div class="relative hero-content z-10 px-4 text-center">
       <div class="max-w-3xl" in:fly={{ y: 30, duration: 800, easing: cubicOut }}>
-        <div class="mb-6 badge badge-outline p-3 text-sm badge-secondary">
+        <div class="mb-6 badge badge-outline p-3 text-sm badge-primary">
           Official Internal Elections Platform
         </div>
         <h1 class="mb-6 text-4xl leading-tight font-extrabold md:text-6xl">
-          Secure, Transparent, and <span class="text-secondary">Auditable</span>
+          Secure, Transparent, and <span class="text-primary">Auditable</span>
           Voting
         </h1>
         <p class="py-4 text-lg leading-relaxed text-base-content/70 md:text-xl">
@@ -71,7 +71,7 @@
           >. Ensuring integrity, anonymity, and accessibility for all accredited members.
         </p>
         <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-          <a href="/elections" class="btn gap-2 shadow-lg shadow-secondary/20 btn-lg btn-secondary">
+          <a href="/elections" class="btn gap-2 shadow-lg shadow-primary/20 btn-lg btn-primary">
             🗳️ Cast Your Vote
           </a>
           <a href="/admin" class="btn gap-2 btn-outline btn-lg"> 🛡️ Administration Portal </a>
@@ -101,9 +101,9 @@
 
       <ul class="steps steps-vertical w-full text-sm md:steps-horizontal md:text-base">
         {#each steps as step, i}
-          <li class="step step-secondary" in:fly={{ y: 20, duration: 600, delay: i * 150 }}>
+          <li class="step step-primary" in:fly={{ y: 20, duration: 600, delay: i * 150 }}>
             <div class="mt-4 flex flex-col items-center gap-2 text-center md:mt-2">
-              <div class="text-lg font-bold text-secondary">{step.title}</div>
+              <div class="text-lg font-bold text-primary">{step.title}</div>
               <p class="max-w-xs text-base-content/60">{step.desc}</p>
             </div>
           </li>
@@ -124,7 +124,7 @@
             class="card border border-base-300 bg-base-100 shadow-md transition-shadow hover:shadow-xl"
           >
             <div class="card-body items-center text-center">
-              <feature.icon size={32} class="mb-2 text-secondary" />
+              <feature.icon size={32} class="mb-2 text-primary" />
               <h3 class="card-title text-primary">{feature.title}</h3>
               <p class="text-sm text-base-content/70">{feature.desc}</p>
             </div>
@@ -143,7 +143,7 @@
         platform is for internal, accredited use only.
       </p>
     </aside>
-    <nav class="mt-4 grid grid-flow-col gap-6 text-sm">
+    <nav class="mt-4 grid gap-6 text-sm md:grid-flow-col">
       <a href="/privacy" class="link link-hover">Privacy Policy</a>
       <a href="/electoral-guidelines" class="link link-hover">Electoral Guidelines</a>
       <a href="mailto:support@mscz.org.zm" class="link link-hover">Technical Support</a>
