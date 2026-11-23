@@ -2,8 +2,11 @@
   import { enhance } from "$app/forms";
   import { page } from "$app/state";
   import type { User } from "better-auth";
+  import ThemeToggle from "./ThemeToggle.svelte";
 
   let { user }: { user: User } = $props();
+
+  let isAdminRoute = $derived(page.url.pathname.startsWith("/admin"));
 
   function getInitials(name: string) {
     const res = name
@@ -13,10 +16,6 @@
 
     return res;
   }
-
-  // $inspect(user);
-
-  let isAdminRoute = $derived(page.url.pathname.startsWith("/admin"));
 </script>
 
 <!-- Navbar -->
@@ -34,6 +33,9 @@
       </a>
     </div>
 
+    <!-- Theme Toggle -->
+    <ThemeToggle />
+
     {#if !user}
       <ul class="flex-none gap-2">
         <a href="/login" class="btn hidden btn-ghost btn-sm sm:inline-flex">Voter Login</a>
@@ -43,10 +45,10 @@
       <div class="flex gap-2">
         <div class="avatar avatar-placeholder">
           <div class="w-8 rounded-full bg-neutral text-neutral-content">
-            <span class="text-sm uppercase">{getInitials(user.name)}</span>
+            <span class="text-sm font-bold uppercase">{getInitials(user.name)}</span>
           </div>
         </div>
-        <form method="post" action="?/signOut" use:enhance>
+        <form method="post" action="/?/signOut" use:enhance>
           <button class="btn btn-ghost btn-sm">Sign out</button>
         </form>
       </div>

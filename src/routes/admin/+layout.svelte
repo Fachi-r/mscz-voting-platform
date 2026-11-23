@@ -1,5 +1,6 @@
 <!-- src/routes/admin/+layout.svelte -->
 <script lang="ts">
+  import ThemeToggle from "#lib/components/ThemeToggle.svelte";
   import { enhance } from "$app/forms";
   import { page } from "$app/state";
   import {
@@ -11,7 +12,6 @@
     LogOut,
     Menu,
     setLucideProps,
-    Settings,
     ShieldCheck,
     UserGroup,
   } from "@lucide/svelte";
@@ -89,6 +89,9 @@
         </div>
       </div>
 
+      <!-- Theme Toggle -->
+      <ThemeToggle />
+
       <!-- User Menu -->
       <div class="flex-none gap-2">
         <div class="dropdown dropdown-end">
@@ -119,19 +122,22 @@
             <li class="px-3 py-1">
               <div class="text-sm font-semibold">{data.adminName}</div>
               <div class="text-xs text-base-content/60">
-                {data.adminName || "admin@mscz.org.zm"}
+                {data.user?.email || "admin@mscz.org.zm"}
               </div>
             </li>
             <div class="divider my-1"></div>
+
             <li>
-              <a href="/admin/settings" class="gap-2">
-                <Settings />
-                Settings
-              </a>
-            </li>
-            <li>
-              <form method="POST" action="/?/signOut" use:enhance>
-                <button type="submit" class="gap-2 text-error hover:bg-error/10">
+              <form
+                method="POST"
+                action="/?/signOut"
+                use:enhance
+                class="m-0 flex justify-center p-0"
+              >
+                <button
+                  type="submit"
+                  class="btn w-full gap-2 btn-outline text-error btn-error hover:border-error hover:bg-error/20"
+                >
                   <LogOut />
                   Logout
                 </button>
