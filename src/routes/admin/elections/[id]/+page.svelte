@@ -1,6 +1,25 @@
 <!-- src/routes/admin/elections/[id]/+page.svelte -->
 <script lang="ts">
   import { enhance, type SubmitFunction } from "$app/forms";
+  import {
+    Calendar,
+    CircleAlert,
+    CircleCheck,
+    AlignEndHorizontal,
+    Lock,
+    RefreshCw,
+    Users,
+    Info,
+    Trash,
+    Image,
+    Plus,
+    TriangleAlert,
+    CircleX,
+    Check,
+    FilePen,
+    Clock,
+    Archive,
+  } from "@lucide/svelte";
   import type { PageProps } from "./$types";
 
   let { data, form }: PageProps = $props();
@@ -11,34 +30,34 @@
     timeStyle: "short",
   });
 
-  // Confirmation wrapper for destructive actions
   const confirmFirst = (message: string): SubmitFunction => {
     return ({ cancel }) => {
       if (!confirm(message)) cancel();
     };
   };
 
-  // Helper to determine badge color based on status
-  function getStatusBadgeClass(status: string): string {
-    const statusMap: Record<string, string> = {
-      draft: "badge-ghost",
-      scheduled: "badge-info",
-      active: "badge-success",
-      closed: "badge-warning",
-      archived: "badge-neutral",
-    };
-    return statusMap[status.toLowerCase()] || "badge-ghost";
-  }
+  type ElectionStatusConfig = {
+    class: string;
+    icon: typeof FilePen;
+  };
 
-  function getStatusIcon(status: string): string {
-    const iconMap: Record<string, string> = {
-      draft: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>`,
-      scheduled: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      active: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      closed: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      archived: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>`,
-    };
-    return iconMap[status.toLowerCase()] || "";
+  const electionStatusMap: Record<string, ElectionStatusConfig> = {
+    draft: { class: "badge-ghost", icon: FilePen },
+    scheduled: { class: "badge-info", icon: Clock },
+    active: { class: "badge-success", icon: CircleCheck },
+    closed: { class: "badge-warning", icon: CircleAlert },
+    archived: { class: "badge-neutral", icon: Archive },
+  };
+
+  let statusConfig = $derived(getElectionStatusConfig(data.election.status));
+
+  function getElectionStatusConfig(status: string): ElectionStatusConfig {
+    return (
+      electionStatusMap[status.toLowerCase()] || {
+        class: "badge-ghost",
+        icon: FilePen,
+      }
+    );
   }
 
   function getCandidateName(c: { name?: string; surname?: string; givenNames?: string }): string {
@@ -64,8 +83,8 @@
     <div>
       <h1 class="flex flex-wrap items-center gap-3 text-3xl font-bold text-base-content">
         {data.election.title}
-        <span class="badge {getStatusBadgeClass(data.election.status)} gap-1 text-sm">
-          {@html getStatusIcon(data.election.status)}
+        <span class={`badge ${statusConfig.class} gap-1 text-sm`}>
+          <statusConfig.icon class="size-3" />
           <span class="capitalize">{data.election.status}</span>
         </span>
       </h1>
@@ -75,20 +94,7 @@
         </p>
       {/if}
       <p class="mt-2 flex items-center gap-2 text-sm text-base-content/50">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
+        <Calendar class="size-4" />
         {fmt.format(data.election.startsAt)} → {fmt.format(data.election.endsAt)} (Africa/Lusaka)
       </p>
     </div>
@@ -98,35 +104,13 @@
 <!-- Global Form Feedback -->
 {#if form?.message}
   <div class="mb-6 alert alert-error shadow-lg" role="alert">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 shrink-0 stroke-current"
-      fill="none"
-      viewBox="0 0 24 24"
-      ><path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-      /></svg
-    >
+    <CircleAlert class="size-6 shrink-0 stroke-current" />
     <span>{form.message}</span>
   </div>
 {/if}
 {#if form?.success}
   <div class="mb-6 alert alert-success shadow-lg" role="status">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 shrink-0 stroke-current"
-      fill="none"
-      viewBox="0 0 24 24"
-      ><path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      /></svg
-    >
+    <CircleCheck class="size-6 shrink-0 stroke-current" />
     <span>{form.success}</span>
   </div>
 {/if}
@@ -135,20 +119,7 @@
 <div class="card mb-6 border border-base-300 bg-base-100 shadow-md">
   <div class="card-body">
     <h2 class="mb-4 card-title flex items-center gap-2 text-lg">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-5 w-5 text-primary"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        />
-      </svg>
+      <AlignEndHorizontal class="size-5 text-primary" />
       Live Turnout
     </h2>
     <div class="grid grid-cols-1 items-center gap-6 md:grid-cols-3">
@@ -181,19 +152,7 @@
 <!-- Locked Warning -->
 {#if data.locked && !data.election.isClosed}
   <div class="mb-6 alert alert-warning shadow-md">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 shrink-0 stroke-current"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-      />
-    </svg>
+    <Lock class="size-6 shrink-0 stroke-current" />
     <div>
       <h3 class="font-bold">Election Locked</h3>
       <div class="text-sm">
@@ -212,9 +171,9 @@
       <form method="POST" action="?/updateDates" use:enhance>
         <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="form-control">
-            <label class="label" for="startsAt"
-              ><span class="label-text font-medium">Opens (Lusaka Time)</span></label
-            >
+            <label class="label" for="startsAt">
+              <span class="label-text font-medium">Opens (Lusaka Time)</span>
+            </label>
             <input
               id="startsAt"
               name="startsAt"
@@ -225,9 +184,9 @@
             />
           </div>
           <div class="form-control">
-            <label class="label" for="endsAt"
-              ><span class="label-text font-medium">Closes (Lusaka Time)</span></label
-            >
+            <label class="label" for="endsAt">
+              <span class="label-text font-medium">Closes (Lusaka Time)</span>
+            </label>
             <input
               id="endsAt"
               name="endsAt"
@@ -240,19 +199,7 @@
         </div>
         <div class="card-actions justify-end">
           <button type="submit" class="btn btn-primary btn-sm">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              /></svg
-            >
+            <RefreshCw class="size-4" />
             Update Dates
           </button>
         </div>
@@ -264,37 +211,13 @@
 <!-- Positions and Candidates -->
 <div class="mb-6">
   <h2 class="mb-4 flex items-center gap-2 text-2xl font-bold text-base-content">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 text-primary"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
+    <Users class="size-6 text-primary" />
     Positions & Candidates
   </h2>
 
   {#if data.polls.length === 0}
     <div class="alert alert-info">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-6 w-6 shrink-0 stroke-current"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path></svg
-      >
+      <Info class="size-6 shrink-0 stroke-current" />
       <span>No positions have been added to this election yet.</span>
     </div>
   {:else}
@@ -322,19 +245,7 @@
                 >
                   <input type="hidden" name="pollId" value={poll.id} />
                   <button type="submit" class="btn gap-1 btn-error btn-sm">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      /></svg
-                    >
+                    <Trash class="size-4" />
                     Delete Position
                   </button>
                 </form>
@@ -360,9 +271,7 @@
                   <tbody>
                     {#each poll.candidates as c (c.id)}
                       <tr class="hover">
-                        <td class="text-sm font-medium">
-                          {c.name ?? ""}
-                        </td>
+                        <td class="text-sm font-medium">{c.name ?? ""}</td>
                         <td class="font-mono text-xs">{c.nrc || "—"}</td>
                         <td class="text-xs">{c.msczMembershipNumber || "—"}</td>
                         <td
@@ -378,19 +287,7 @@
                               target="_blank"
                               class="flex link items-center gap-1 text-xs link-primary"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="h-3 w-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                ><path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                /></svg
-                              >
+                              <Image class="size-3" />
                               View
                             </a>
                           {:else}
@@ -423,7 +320,7 @@
               </div>
             {/if}
 
-            <!-- Add Candidate Form (New Structure) -->
+            <!-- Add Candidate Form -->
             {#if !data.locked}
               <form
                 method="POST"
@@ -435,10 +332,9 @@
 
                 <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <div class="form-control">
-                    <label class="label py-1" for="givenNames"
-                      ><span class="label-text text-xs font-semibold uppercase">Given Names</span
-                      ></label
-                    >
+                    <label class="label py-1" for="givenNames">
+                      <span class="label-text text-xs font-semibold uppercase">Given Names</span>
+                    </label>
                     <input
                       name="givenNames"
                       required
@@ -448,10 +344,9 @@
                   </div>
 
                   <div class="form-control">
-                    <label class="label py-1" for="surname"
-                      ><span class="label-text text-xs font-semibold uppercase">Surname</span
-                      ></label
-                    >
+                    <label class="label py-1" for="surname">
+                      <span class="label-text text-xs font-semibold uppercase">Surname</span>
+                    </label>
                     <input
                       name="surname"
                       required
@@ -461,9 +356,9 @@
                   </div>
 
                   <div class="form-control">
-                    <label class="label py-1" for="nrc"
-                      ><span class="label-text text-xs font-semibold uppercase">NRC</span></label
-                    >
+                    <label class="label py-1" for="nrc">
+                      <span class="label-text text-xs font-semibold uppercase">NRC</span>
+                    </label>
                     <input
                       name="nrc"
                       required
@@ -473,11 +368,11 @@
                   </div>
 
                   <div class="form-control">
-                    <label class="label py-1" for="msczMembershipNumber"
-                      ><span class="label-text text-xs font-semibold uppercase"
+                    <label class="label py-1" for="msczMembershipNumber">
+                      <span class="label-text text-xs font-semibold uppercase"
                         >MSCZ Membership No.</span
-                      ></label
-                    >
+                      >
+                    </label>
                     <input
                       name="msczMembershipNumber"
                       required
@@ -487,11 +382,11 @@
                   </div>
 
                   <div class="form-control">
-                    <label class="label py-1" for="highestQualification"
-                      ><span class="label-text text-xs font-semibold uppercase"
+                    <label class="label py-1" for="highestQualification">
+                      <span class="label-text text-xs font-semibold uppercase"
                         >Highest Qualification</span
-                      ></label
-                    >
+                      >
+                    </label>
                     <input
                       name="highestQualification"
                       required
@@ -501,11 +396,11 @@
                   </div>
 
                   <div class="form-control">
-                    <label class="label py-1" for="image"
-                      ><span class="label-text text-xs font-semibold uppercase"
+                    <label class="label py-1" for="image">
+                      <span class="label-text text-xs font-semibold uppercase"
                         >Photo URL (Optional)</span
-                      ></label
-                    >
+                      >
+                    </label>
                     <input
                       name="image"
                       type="url"
@@ -517,19 +412,7 @@
 
                 <div class="flex justify-end">
                   <button type="submit" class="btn gap-1 btn-primary btn-sm">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 4v16m8-8H4"
-                      /></svg
-                    >
+                    <Plus class="size-4" />
                     Add Candidate
                   </button>
                 </div>
@@ -549,9 +432,9 @@
         <form method="POST" action="?/addPoll" use:enhance>
           <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
             <div class="form-control md:col-span-7">
-              <label for="position" class="label py-1"
-                ><span class="label-text font-medium">Position Title</span></label
-              >
+              <label for="position" class="label py-1">
+                <span class="label-text font-medium">Position Title</span>
+              </label>
               <input
                 id="position"
                 name="position"
@@ -562,9 +445,9 @@
               />
             </div>
             <div class="form-control md:col-span-3">
-              <label for="maxSelections" class="label py-1"
-                ><span class="label-text font-medium">Seats Available</span></label
-              >
+              <label for="maxSelections" class="label py-1">
+                <span class="label-text font-medium">Seats Available</span>
+              </label>
               <input
                 id="maxSelections"
                 name="maxSelections"
@@ -577,19 +460,7 @@
             </div>
             <div class="md:col-span-2">
               <button type="submit" class="btn w-full gap-1 btn-primary">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  /></svg
-                >
+                <Plus class="size-4" />
                 Add Position
               </button>
             </div>
@@ -605,20 +476,7 @@
   <div class="card mb-6 border border-error/20 bg-error/5 shadow-sm">
     <div class="card-body">
       <h2 class="card-title flex items-center gap-2 text-error">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
+        <TriangleAlert class="size-6" />
         Close Election
       </h2>
       <p class="max-w-3xl text-base-content/80">
@@ -626,9 +484,9 @@
           >This action cannot be undone.</strong
         >
         {#if data.election.status === "ended"}
-          <span class="mt-2 block font-medium text-error"
-            >The voting window has already ended. You should close it now to reveal results.</span
-          >
+          <span class="mt-2 block font-medium text-error">
+            The voting window has already ended. You should close it now to reveal results.
+          </span>
         {/if}
       </p>
       <div class="mt-2 card-actions justify-end">
@@ -640,20 +498,7 @@
           )}
         >
           <button type="submit" class="btn gap-2 btn-error">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-              />
-            </svg>
+            <CircleX class="size-5" />
             Close Election & Reveal Results
           </button>
         </form>
@@ -666,20 +511,7 @@
 {#if data.results}
   <div class="mb-6">
     <h2 class="mb-4 flex items-center gap-2 text-2xl font-bold text-base-content">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 text-success"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
+      <CircleCheck class="size-6 text-success" />
       Official Results
     </h2>
 
@@ -703,42 +535,20 @@
             <!-- Integrity Warnings -->
             {#if r.tie}
               <div class="mb-4 alert alert-warning">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 shrink-0 stroke-current"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  /></svg
-                >
-                <span
-                  ><strong>Tie Detected:</strong> A runoff is needed between the tied candidates for the
-                  last seat.</span
-                >
+                <TriangleAlert class="size-6 shrink-0 stroke-current" />
+                <span>
+                  <strong>Tie Detected:</strong> A runoff is needed between the tied candidates for the
+                  last seat.
+                </span>
               </div>
             {/if}
             {#if !r.auditOk}
               <div class="mb-4 alert alert-error">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 shrink-0 stroke-current"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  /></svg
-                >
-                <span
-                  ><strong>Integrity Check Failed:</strong> There are more votes than ballots × seats
-                  allow. Investigate before announcing results.</span
-                >
+                <CircleAlert class="size-6 shrink-0 stroke-current" />
+                <span>
+                  <strong>Integrity Check Failed:</strong> There are more votes than ballots × seats allow.
+                  Investigate before announcing results.
+                </span>
               </div>
             {/if}
 
@@ -756,44 +566,36 @@
                 <tbody>
                   {#each r.rows as row (row.id)}
                     <tr class="hover {row.status === 'elected' ? 'bg-success/5' : ''}">
-                      <td class="font-medium {row.status === 'elected' ? 'text-success' : ''}"
-                        >{row.name}</td
-                      >
+                      <td class="font-medium {row.status === 'elected' ? 'text-success' : ''}">
+                        {row.name}
+                      </td>
                       <td class="text-right font-mono">{row.votes}</td>
-                      <td class="text-right font-mono text-base-content/70">{row.pct}%</td>
+
+                      <td class="text-right font-mono text-base-content/70">
+                        <div class="flex items-center gap-3">
+                          <div class="flex-1">
+                            <progress
+                              class="progress {row.status === 'elected'
+                                ? 'progress-success'
+                                : 'progress-primary'} h-2 w-full"
+                              value={row.pct}
+                              max="100"
+                            ></progress>
+                          </div>
+                          <span class="w-12 text-right font-mono text-sm text-base-content/70">
+                            {row.pct}%
+                          </span>
+                        </div>
+                      </td>
                       <td class="text-center">
                         {#if row.status === "elected"}
                           <span class="badge gap-1 badge-success">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              class="h-3 w-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              ><path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="3"
-                                d="M5 13l4 4L19 7"
-                              /></svg
-                            >
+                            <Check class="size-3" stroke-width="3" />
                             Elected
                           </span>
                         {:else if row.status === "tied"}
                           <span class="badge gap-1 badge-warning">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              class="h-3 w-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              ><path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              /></svg
-                            >
+                            <CircleAlert class="size-3" />
                             Tied
                           </span>
                         {/if}

@@ -4,8 +4,6 @@
     AlignEndHorizontal,
     Archive,
     Calendar,
-    CalendarCheck,
-    CalendarX,
     CalendarX2,
     CircleAlert,
     CircleCheck,

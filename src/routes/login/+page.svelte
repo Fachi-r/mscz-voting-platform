@@ -1,17 +1,25 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { Mail, Lock, setLucideProps, User, IdCard, Hash } from "@lucide/svelte";
+  import {
+    CircleAlert,
+    Hash,
+    IdCard,
+    Lock,
+    Mail,
+    setLucideProps,
+    ShieldCheck,
+    User,
+  } from "@lucide/svelte";
   import type { ActionData } from "./$types";
 
   let { form }: { form: ActionData } = $props();
 
-  // Svelte 5 state for form submission feedback
   let isSubmitting = $state(false);
   let activeAction = $state<string | null>(null);
 
   setLucideProps({
     size: 22,
-    class: "text-base-content/50",
+    class: "text-base-content/70",
   });
 </script>
 
@@ -33,20 +41,7 @@
       <div
         class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-8 w-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-          />
-        </svg>
+        <ShieldCheck class="size-8" />
       </div>
       <h1 class="text-3xl font-bold text-base-content">MSCZ Voting Portal</h1>
       <p class="mt-2 text-base-content/60">
@@ -57,18 +52,7 @@
     <!-- Form Feedback Message -->
     {#if form?.message}
       <div class="mb-6 alert animate-pulse alert-error shadow-lg">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6 shrink-0 stroke-current"
-          fill="none"
-          viewBox="0 0 24 24"
-          ><path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-          /></svg
-        >
+        <CircleAlert class="size-6 shrink-0 stroke-current" />
         <span>{form.message}</span>
       </div>
     {/if}
@@ -83,7 +67,6 @@
             <span class="label-text font-medium">Email Address</span>
             <label class="input transition-colors">
               <Mail />
-
               <input
                 type="email"
                 name="email"
@@ -112,26 +95,26 @@
             </label>
           </div>
 
-          <!-- Name Field (Only visually prominent if registering, but kept in form for scaffolding) -->
+          <!-- Name Field -->
           <div class="form-control">
-            <span class="label-text font-medium"
-              >Full Name <span class="font-normal text-base-content/40"
+            <span class="label-text font-medium">
+              Full Name <span class="font-normal text-base-content/40"
                 >(Required for new registration)</span
-              ></span
-            >
+              >
+            </span>
             <label class="input transition-colors">
               <User />
               <input type="text" name="name" placeholder="John Doe" class="grow bg-transparent" />
             </label>
           </div>
 
-          <!-- MSCZ Membership Number (Only visually prominent if registering, but kept in form for scaffolding) -->
+          <!-- MSCZ Membership Number -->
           <div class="form-control">
-            <span class="label-text font-medium"
-              >MSCZ Membership Number <span class="font-normal text-base-content/40"
+            <span class="label-text font-medium">
+              MSCZ Membership Number <span class="font-normal text-base-content/40"
                 >(Required for new registration)</span
-              ></span
-            >
+              >
+            </span>
             <label class="input transition-colors">
               <IdCard />
               <input
@@ -193,7 +176,7 @@
             <input type="hidden" name="callbackURL" value="/" />
             <button type="submit" class="btn w-full gap-3" disabled={isSubmitting}>
               <!-- GitHub Icon -->
-              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg class="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   fill-rule="evenodd"
                   d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
@@ -210,9 +193,9 @@
           <form method="POST" action="?/signInSocial" use:enhance class="m-0">
             <input type="hidden" name="provider" value="google" />
             <input type="hidden" name="callbackURL" value="/" />
+            <!-- Google Icon -->
             <button type="submit" class="btn w-full gap-3" disabled={isSubmitting}>
-              <!-- Google Icon -->
-              <svg class="h-5 w-5" viewBox="0 0 24 24">
+              <svg class="size-5" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"

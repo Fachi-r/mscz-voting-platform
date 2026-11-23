@@ -1,6 +1,19 @@
 <!-- src/routes/elections/[id]/+page.svelte -->
 <script lang="ts">
   import { enhance, type SubmitFunction } from "$app/forms";
+  import {
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    CircleCheck,
+    ClipboardCheck,
+    Clock,
+    FileText,
+    Info,
+    ShieldCheck,
+    TriangleAlert,
+    X,
+  } from "@lucide/svelte";
   import type { PageProps } from "./$types";
 
   let { data, form }: PageProps = $props();
@@ -61,9 +74,7 @@
   <!-- Breadcrumb -->
   <div class="breadcrumbs text-sm text-base-content/60">
     <ul>
-      <li>
-        <a href="/elections" class="hover:text-primary">Dashboard</a>
-      </li>
+      <li><a href="/elections" class="hover:text-primary">Dashboard</a></li>
       <li class="font-semibold text-base-content">Ballot</li>
     </ul>
   </div>
@@ -72,20 +83,7 @@
   <div class="card border border-base-300 bg-base-100 shadow-md">
     <div class="card-body">
       <h1 class="flex items-center gap-3 text-2xl font-bold text-base-content md:text-3xl">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-8 w-8 text-primary"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-          />
-        </svg>
+        <ClipboardCheck class="size-8 text-primary" />
         {data.election.title}
       </h1>
       {#if data.election.description}
@@ -99,20 +97,7 @@
     <div class="card border border-info/30 bg-info/10 shadow-sm">
       <div class="card-body">
         <h2 class="card-title flex items-center gap-2 text-lg text-info">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <Info class="size-5" />
           Elected Unopposed
         </h2>
         <p class="mb-3 text-sm text-base-content/80">
@@ -123,10 +108,10 @@
           {#each data.unopposed as p (p.id)}
             <li class="flex items-start gap-2 text-sm">
               <span class="mt-0.5 badge badge-sm badge-info">Filled</span>
-              <span
-                ><strong class="text-base-content">{p.position}:</strong>
-                {p.candidates.map((c) => c.name).join(", ")}</span
-              >
+              <span>
+                <strong class="text-base-content">{p.position}:</strong>
+                {p.candidates.map((c) => c.name).join(", ")}
+              </span>
             </li>
           {/each}
         </ul>
@@ -139,16 +124,7 @@
     <div class="card border border-success/30 bg-success/10 shadow-lg">
       <div class="card-body items-center py-10 text-center">
         <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-8 w-8 text-success"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="3"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+          <Check class="size-8 text-success" stroke-width="3" />
         </div>
         <h2 class="text-2xl font-bold text-success">Vote Recorded Successfully</h2>
         <p class="mt-2 max-w-md text-base-content/70">
@@ -157,20 +133,7 @@
         </p>
         <div class="mt-6 card-actions">
           <a href="/voter/receipt" class="btn gap-2 btn-success">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <FileText class="size-5" />
             View Voting Receipt
           </a>
         </div>
@@ -180,18 +143,7 @@
     <!-- State: Upcoming -->
   {:else if data.election.status === "upcoming"}
     <div class="alert alert-info shadow-md">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-6 w-6 shrink-0 stroke-current"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path></svg
-      >
+      <Clock class="size-6 shrink-0 stroke-current" />
       <div>
         <h3 class="font-bold">Voting Not Yet Open</h3>
         <div class="text-sm">
@@ -203,18 +155,7 @@
     <!-- State: Ended (Not Closed) -->
   {:else if data.election.status === "ended"}
     <div class="alert alert-warning shadow-md">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-6 w-6 shrink-0 stroke-current"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        ></path></svg
-      >
+      <TriangleAlert class="size-6 shrink-0 stroke-current" />
       <div>
         <h3 class="font-bold">Voting Window Closed</h3>
         <div class="text-sm">
@@ -227,18 +168,7 @@
     <!-- State: Closed -->
   {:else if data.election.status === "closed"}
     <div class="alert alert-success shadow-md">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-6 w-6 shrink-0 stroke-current"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path></svg
-      >
+      <CircleCheck class="size-6 shrink-0 stroke-current" />
       <div>
         <h3 class="font-bold">Election Concluded</h3>
         <div class="text-sm">
@@ -253,18 +183,7 @@
     <!-- State: Not Verified -->
   {:else if !data.canVote}
     <div class="alert alert-error shadow-md">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-6 w-6 shrink-0 stroke-current"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        ></path></svg
-      >
+      <TriangleAlert class="size-6 shrink-0 stroke-current" />
       <div>
         <h3 class="font-bold">Verification Required</h3>
         <div class="text-sm">
@@ -283,22 +202,11 @@
     <!-- State: Active Voting -->
   {:else}
     <div class="mb-4 alert alert-info shadow-sm">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="h-5 w-5 shrink-0 stroke-current"
-        ><path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path></svg
-      >
-      <span class="text-sm font-medium"
-        >Voting closes on {fmt.format(data.election.endsAt)}. Take your time to review your
-        selections.</span
-      >
+      <Clock class="size-5 shrink-0 stroke-current" />
+      <span class="text-sm font-medium">
+        Voting closes on {fmt.format(data.election.endsAt)}. Take your time to review your
+        selections.
+      </span>
     </div>
 
     <form method="POST" action="?/vote" use:enhance={handleSubmit} class="space-y-6">
@@ -380,20 +288,7 @@
                       class="btn gap-1 btn-ghost text-error btn-sm hover:bg-error/10"
                       onclick={() => (selected[poll.id] = [])}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <X class="size-4" />
                       Clear selection (Abstain)
                     </button>
                   </div>
@@ -413,20 +308,7 @@
             }}
           >
             Review Ballot
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <ChevronRight class="size-5" />
           </button>
         </div>
       {:else}
@@ -435,20 +317,7 @@
           <div class="card-body">
             <div class="mb-6 flex items-center gap-3">
               <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <CircleCheck class="size-6 text-primary" />
               </div>
               <div>
                 <h2 class="text-2xl font-bold text-base-content">Review Your Ballot</h2>
@@ -484,39 +353,17 @@
 
             {#if totalSelected === 0}
               <div class="mb-4 alert alert-warning">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 shrink-0 stroke-current"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  /></svg
-                >
-                <span
-                  >You haven't selected any candidates. Submitting will record an <strong
+                <TriangleAlert class="size-6 shrink-0 stroke-current" />
+                <span>
+                  You haven't selected any candidates. Submitting will record an <strong
                     >abstention</strong
-                  > for every position.</span
-                >
+                  > for every position.
+                </span>
               </div>
             {/if}
 
             <div class="mb-6 alert alert-error">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 shrink-0 stroke-current"
-                fill="none"
-                viewBox="0 0 24 24"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                /></svg
-              >
+              <TriangleAlert class="size-6 shrink-0 stroke-current" />
               <div>
                 <h3 class="font-bold">Final Submission Warning</h3>
                 <div class="text-sm">
@@ -539,20 +386,7 @@
                 onclick={() => (step = "select")}
                 disabled={submitting}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+                <ChevronLeft class="size-4" />
                 Back to Selections
               </button>
 
@@ -565,20 +399,7 @@
                   <span class="loading loading-sm loading-spinner"></span>
                   Sealing Ballot...
                 {:else}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
+                  <ShieldCheck class="size-5" />
                   Submit Final Ballot
                 {/if}
               </button>

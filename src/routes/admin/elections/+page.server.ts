@@ -1,52 +1,37 @@
+// src/routes/admin/elections/+page.server.ts
+import { electionStatusSql } from "#lib/server/admin.ts";
 import { db } from "#lib/server/db/index.ts";
-import { ballots, candidates, elections, polls } from "#lib/server/db/schema.js";
+import { ballots, elections, polls } from "#lib/server/db/schema.ts";
 import { redirect } from "@sveltejs/kit";
-import { and, asc, eq, inArray } from "drizzle-orm";
-import type { PageServerLoad } from "../$types";
+import { desc, eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Adjust "/login" to wherever your sign-in page lives
   if (!locals.user) redirect(303, "/login");
-  if (!locals.user.nrc) redirect(303, "/onboarding");
 
-  const allElections = await db.select().from(elections).orderBy(elections.createdAt);
+  const list = await db
+    .select({
+      id: elections.id,
+      title: elections.title,
+      startsAt: elections.startsAt,
+      endsAt: elections.endsAt,
+      status: electionStatusSql,
+    })
+    .from(elections)
+    .orderBy(desc(elections.startsAt));
 
-  const electionPolls = await db
-    .select()
-    .from(polls)
-    .orderBy(asc(polls.displayOrder), asc(polls.id));
+  const votedIn = await db
+    .selectDistinct({ electionId: polls.electionId })
+    .from(ballots)
+    .innerJoin(polls, eq(ballots.pollId, polls.id))
+    .where(eq(ballots.userId, locals.user.id));
 
-  const pollIds = electionPolls.map((p) => p.id);
-
-  const pollCandidates = pollIds.length
-    ? await db
-        .select({
-          id: candidates.id,
-          pollId: candidates.pollId,
-          surname: candidates.surname,
-          givenNames: candidates.givenNames,
-          image: candidates.image,
-        })
-        .from(candidates)
-        .where(inArray(candidates.pollId, pollIds))
-        .orderBy(asc(candidates.id))
-    : [];
-
-  const [existingBallot] = pollIds.length
-    ? await db
-        .select({ id: ballots.id })
-        .from(ballots)
-        .where(and(eq(ballots.userId, locals.user.id), inArray(ballots.pollId, pollIds)))
-        .limit(1)
-    : [];
+  const votedSet = new Set(votedIn.map((v) => v.electionId));
 
   return {
-    elections: allElections,
-    polls: electionPolls.map((p) => ({
-      ...p,
-      candidates: pollCandidates.filter((c) => c.pollId === p.id),
-    })),
-    hasVoted: !!existingBallot,
-    canVote: locals.user.isVerified && !locals.user.banned,
+    elections: list.map((e) => ({ ...e, hasVoted: votedSet.has(e.id) })),
+    needsNrc: !locals.user.nrc,
+    isVerified: locals.user.isVerified,
   };
 };

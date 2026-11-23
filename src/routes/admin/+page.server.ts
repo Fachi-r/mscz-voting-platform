@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     .select({
       id: elections.id,
       title: elections.title,
+      description: elections.description,
       startsAt: elections.startsAt,
       endsAt: elections.endsAt,
       status: electionStatusSql,
