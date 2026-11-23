@@ -1,6 +1,5 @@
 <!-- src/routes/admin/elections/[id]/+page.svelte -->
 <script lang="ts">
-  import { candidateName } from "#lib/server/voting/results.ts";
   import { enhance, type SubmitFunction } from "$app/forms";
   import type { PageProps } from "./$types";
 
@@ -40,6 +39,11 @@
       archived: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>`,
     };
     return iconMap[status.toLowerCase()] || "";
+  }
+
+  function getCandidateName(c: { name?: string; surname?: string; givenNames?: string }): string {
+    if (c.givenNames && c.surname) return `${c.givenNames} ${c.surname}`;
+    return c.name || "Unknown Candidate";
   }
 </script>
 
@@ -398,7 +402,9 @@
                             <form
                               method="POST"
                               action="?/deleteCandidate"
-                              use:enhance={confirmFirst(`Remove candidate "${candidateName(c)}"?`)}
+                              use:enhance={confirmFirst(
+                                `Remove candidate "${getCandidateName(c)}"?`,
+                              )}
                             >
                               <input type="hidden" name="candidateId" value={c.id} />
                               <button
